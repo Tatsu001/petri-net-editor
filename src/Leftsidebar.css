@@ -1,0 +1,114 @@
+.Leftsidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 200px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  
+  .LeftsidebarList {
+    width: 100%;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  
+  .LeftsidebarList li {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    background-color: #fff;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .LeftsidebarList li:hover {
+    background-color: #e1e1e1;
+    color: #fff;
+  }
+  
+  .LeftsidebarList li.active {
+    background-color: #333;
+    color: #fff;
+  }
+  
+  .Rightsidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 350px;
+    background-color: #fff;
+    box-shadow: -10px 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  
+  .CreateModel,
+  .SelectConflict,
+  .CreateController,
+  .ChangeLadder,
+  .FileOperation {
+    width: 100%;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  
+  .CreateModel button,
+  .CreateTransition button,
+  .CreateArc button,
+  .CreateController button,
+  .ChangeLadder button,
+  .FileOperation button {
+    width: 80%;
+    margin: 10px 0;
+    padding: 15px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    background-color: #333;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .CreateModel button:hover,
+  .CreateTransition button:hover,
+  .CreateArc button:hover,
+  .CreateController button:hover,
+  .ChangeLadder button:hover,
+  .FileOperation button:hover {
+    background-color: #fff;
+    color: #333;
+  }
+  
+  .Rightsidebar button {
+    width: 60%;
+    font-size: 14px;
+    padding: 5px;
+    border-radius: 5px;
+  }
+  
