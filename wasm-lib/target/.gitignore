@@ -1,0 +1,3 @@
+# windowsとLinuxで変わりそうなので
+/target
+.rustc_info.json
