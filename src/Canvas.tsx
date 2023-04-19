@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
+import * as ContextMenu from "@radix-ui/react-context-menu"; // npm install @radix-ui/react-context-menu@latest -Eでダウンロード
+import "./Canvas.css"; // npm install @radix-ui/colors@latest -Eでダウンロード
+// contextmenu作るの面倒なので円をクリックしたらRIghtsidebarに「削除」ボタンが表示されるようにする
+// ↑今表示してるとこの位置を変えるだけ
 
 interface Circle {
   id: number;
@@ -40,6 +44,8 @@ const App: React.FC = () => {
     setCircles(updatedCircles);
   };
 
+  /*
+  // ドラッグアンドドロップできるようにしたい
   const handleMoveCircle = (e: React.MouseEvent<SVGCircleElement>) => {
     if (selectedCircle) {
       const newCx = e.nativeEvent.offsetX;
@@ -49,7 +55,7 @@ const App: React.FC = () => {
       );
       setCircles(updatedCircles);
     }
-  };
+  };*/
 
   const handleDeleteCircle = () => {
     if (selectedCircle) {
@@ -112,7 +118,7 @@ const App: React.FC = () => {
               fill="none"
               strokeWidth="5"
               onClick={() => handleSelectCircle(circle)}
-              onMouseMove={(e) => handleMoveCircle(e)}
+              //onMouseMove={(e) => handleMoveCircle(e)}
               onContextMenu={(e) => handleContextMenu(e)}
             />
           ))}
