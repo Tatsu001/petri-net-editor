@@ -1,5 +1,8 @@
+// 使ってない！！！！
+
 import React, { useState } from 'react';
 import './Leftsidebar.css';
+//import { useSelectedCircleContext } from './Canvas';
 
 function Leftsidebar() {
   const [activeSection, setActiveSection] = useState("");
