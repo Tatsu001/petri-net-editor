@@ -4,13 +4,25 @@ import "./Canvas.css"; // npm install @radix-ui/colors@latest -Eでダウンロ�
 import './Leftsidebar.css';
 
 // foreignobject使用したらsvg内にhtml要素を配置できる（Chrome, FireFoxのみ）
-// 四角も追加する（LeftSidebar.tsxのコメントアウトにヒントあり）
+// foreignObjectによるXHTMLの埋め込みできる　https://atmarkit.itmedia.co.jp/ait/articles/1206/01/news143_5.html
+// ドラッグアンドドロット https://gist.github.com/hashrock/0e8f10d9a233127c5e33b09ca6883ff4
+// svgエディタ作った人 https://hashrock.hatenablog.com/entry/2017/12/04/215559
+// svg詳しい基礎解説 https://www.webdesignleaves.com/pr/html/svg_basic.html
 
 interface Circle {
   id: number;
   cx: number;
   cy: number;
   r: number;
+  stroke: string;
+}
+
+interface Rect {
+  id: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
   stroke: string;
 }
 
@@ -28,6 +40,7 @@ function Canvas() {
   const handleCreateArc = () => {};
 
   // 描画部分
+  // プレース
   const [circles, setCircles] = useState<Circle[]>([]);
   const [selectedCircle, setSelectedCircle] = useState<Circle | null>(null);
   const [isCreatingCircle, setIsCreatingCircle] = useState(false);
@@ -81,9 +94,80 @@ function Canvas() {
     }
   };
 
-  const handleContextMenu = (e: React.MouseEvent<SVGCircleElement>) => {
+
+  // トランジション
+  const [rects, setRects] = useState<Rect[]>([]);
+  const [selectedRect, setSelectedRect] = useState<Rect | null>(null);
+  const [isCreatingRect, setIsCreatingRect] = useState(false);
+
+  const handleCreateRectClick = () => {
+    setIsCreatingRect(true);
+  }
+
+  const handleCreateRect = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (isCreatingRect) {
+      const newRect: Rect = {
+        id: rects.length,
+        x: e.nativeEvent.offsetX,
+        y: e.nativeEvent.offsetY,
+        width: 50,
+        height: 50,
+        stroke: "black",
+      };
+      setRects([...rects, newRect]);
+      setIsCreatingRect(false);
+    }
+    
+  };
+
+  const handleSelectRect = (rect: Rect) => {
+    setSelectedRect(rect);
+    const updatedRects = rects.map(r =>
+      r.id === rect.id ? {...r, stroke: 'blue'} : r
+    );
+    setRects(updatedRects);
+  };
+
+  const handleDeleteRect = () => {
+    if (selectedRect) {
+      const updatedRects = rects.filter((rect) => rect.stroke !== "blue");
+      setRects(updatedRects);
+      setSelectedRect(null);
+    }
+  };
+
+
+  // ここからhandleContextMenuまでcircleとrectは共通処理
+  // 選択解除の処理を追加する
+  const handleDeselectShape = useCallback((e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if ((!target.closest("circle") && selectedCircle)  && (!target.closest("rect") && selectedRect)) {
+      // 円選択解除
+      setSelectedCircle(null);
+      const updatedCircles = circles.map((circle) =>
+        circle.id === selectedCircle.id ? { ...circle, stroke: "black" } : circle
+      );
+      setCircles(updatedCircles);
+      // 四角選択解除
+      setSelectedRect(null);
+      const updatedRects = rects.map((rect) =>
+        rect.id === selectedRect.id ? { ...rect, stroke: "black" } : rect
+      );
+      setRects(updatedRects);
+    }
+  }, [circles, selectedCircle, rects, selectedRect]);
+
+  // 選択解除の処理を監視するためのuseEffectを追加する
+  useEffect(() => {
+    window.addEventListener('click', handleDeselectShape);
+    return () => {
+      window.removeEventListener('click', handleDeselectShape);
+    };
+  }, [handleDeselectShape]);
+  
+  const handleContextMenu = (e: React.MouseEvent<SVGElement>) => {
     e.preventDefault();
-    if (selectedCircle) {
+    if (selectedCircle || selectedRect) {
       const contextMenu = document.getElementById("context-menu");
       if (contextMenu) {
         contextMenu.style.display = "block";
@@ -92,27 +176,6 @@ function Canvas() {
       }
     }
   };
-
-  // 選択解除の処理を追加する
-  const handleDeselectCircle = useCallback((e: MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (!target.closest("circle") && selectedCircle) {
-      setSelectedCircle(null);
-      const updatedCircles = circles.map((circle) =>
-        circle.id === selectedCircle.id ? { ...circle, stroke: "black" } : circle
-      );
-      setCircles(updatedCircles);
-    }
-  }, [circles, selectedCircle]);
-  
-
-  // 選択解除の処理を監視するためのuseEffectを追加する
-  useEffect(() => {
-    window.addEventListener('click', handleDeselectCircle);
-    return () => {
-      window.removeEventListener('click', handleDeselectCircle);
-    };
-  }, [handleDeselectCircle]);
 
   return (
   
@@ -132,11 +195,11 @@ function Canvas() {
             <div className='CreateModel'>
               <h3>プレース作成</h3>
               <input type="text" name="PlaceName" />
-              <button name="CreatePlace" onClick={handleCreatePlace}>作成</button>
+              <button name="CreatePlace" onClick={handleCreateCircleClick}>作成</button>
               <br />
               <h3>トランジション作成</h3>
               <input type="text" name="TransitionName" />
-              <button name="CreateTransition" onClick={handleCreateTransition}>作成</button>
+              <button name="CreateTransition" onClick={handleCreateRectClick}>作成</button>
               <br />
               <h3>アーク作成</h3>
               <button name="CreateArc" onClick={handleCreateArc}>作成</button>
@@ -167,7 +230,11 @@ function Canvas() {
       </div>
 
       {/* 描画部分 */}
-      <svg width="900" height="500" onClick={handleCreateCircle}>
+      <svg width="900" height="500" onClick={(e) => {
+                                      handleCreateCircle(e);
+                                      handleCreateRect(e);
+                                    }}
+      >
         <g>
         {[...Array(10)].map((_, index) => (
             <line key={`horizontal-${index}`} x1={0} y1={index * 50} x2="100%" y2={index * 50} stroke="black" />
@@ -189,16 +256,32 @@ function Canvas() {
               onContextMenu={(e) => handleContextMenu(e)}
             />
           ))}
-            {selectedCircle && (
+          {rects.map((rect) => (
+            <rect
+              key={rect.id}
+              x={rect.x}
+              y={rect.y}
+              width={rect.width}
+              height={rect.height}
+              stroke={rect.stroke}
+              fill="none"
+              strokeWidth="5"
+              onClick={() => handleSelectRect(rect)} 
+              onContextMenu={(e) => handleContextMenu(e)}
+            />
+          ))}
+            {(selectedCircle || selectedRect) && (
               <foreignObject className="DeleteButton" id="context-menu" style={{position: "relative"}}>
                 <ul>
-                  <li onClick={handleDeleteCircle}>削除</li>
+                  <li onClick={() => {
+                        handleDeleteCircle();
+                        handleDeleteRect();
+                      }}>削除</li>
                 </ul>
               </foreignObject>
             )}
         </g>
       </svg>
-      <button onClick={handleCreateCircleClick}>円作成</button>
 
     </div>
     
