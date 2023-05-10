@@ -1,0 +1,10 @@
+circle{
+    fill: #333;
+    transition: all 0.4s ease;
+    stroke: rgb(119, 0, 255);
+    stroke-width: 1px;
+  }
+  .active{
+    fill: white;
+    stroke-width: 50px;
+  }

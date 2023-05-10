@@ -4,6 +4,7 @@ import './index.css';
 import App from './App';
 import Leftsidebar from './Leftsidebar';
 import Canvas from './Canvas';
+import Temp from './Temp';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(
@@ -13,7 +14,8 @@ root.render(
   <React.StrictMode>
     {/*<App />*/}
     {/*<Leftsidebar />*/}
-    <Canvas />
+    {/*<Canvas />*/}
+    <Temp />
   </React.StrictMode>
 );
 

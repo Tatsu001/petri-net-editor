@@ -242,7 +242,8 @@ function Canvas() {
         {[...Array(20)].map((_, index) => (
             <line key={`vertical-${index}`} x1={index * 50} y1={0} x2={index * 50} y2="500" stroke="black" />
         ))}
-          {circles.map((circle) => (
+        <line x1={300} y1={300} x2={400} y2={400} stroke="black"></line>
+        {circles.map((circle) => (
             <circle
               key={circle.id}
               cx={circle.cx}
