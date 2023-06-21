@@ -89,8 +89,9 @@ const Temp3: React.FC = () => {
 
   useEffect(() => {
     const handleWheel = (event: WheelEvent) => {
-       const scale = Math.pow(1.1, event.deltaY < 0 ? -1: 1);
-       zoomAtCenter(event, svgRef.current, scale);
+      if (!event.ctrlKey) return; // コントロールキーが押されていない場合は処理しない
+      const scale = Math.pow(1.1, event.deltaY < 0 ? -1: 1);
+      zoomAtCenter(event, svgRef.current, scale);
     };
 
     const svgElement = svgRef.current;

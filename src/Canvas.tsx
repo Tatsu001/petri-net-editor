@@ -136,22 +136,25 @@ function Canvas() {
     }
   };
 
-
+  // 円１と円２がある場合，１を選択して青にした後，２を選択すると２つとも青になる
+  // しかし，２を選択するときに１のselectedCircleがはずれてるので，２の選択後に
+  // はずれたところをクリックすると，１が青のままで２が黒になるような処理になってしまう
+  // これらを解決するために，複数選択する場合はコントロールを押して選択するようにする．
   // ここからhandleContextMenuまでcircleとrectは共通処理
   // 選択解除の処理を追加する
   const handleDeselectShape = useCallback((e: MouseEvent) => {
     const target = e.target as HTMLElement;
-    if ((!target.closest("circle") && selectedCircle)  && (!target.closest("rect") && selectedRect)) {
+    if ((!target.closest("circle") && selectedCircle) || (!target.closest("rect") && selectedRect)) {
       // 円選択解除
       setSelectedCircle(null);
       const updatedCircles = circles.map((circle) =>
-        circle.id === selectedCircle.id ? { ...circle, stroke: "black" } : circle
+        circle.id === selectedCircle?.id ? { ...circle, stroke: "black" } : circle
       );
       setCircles(updatedCircles);
       // 四角選択解除
       setSelectedRect(null);
       const updatedRects = rects.map((rect) =>
-        rect.id === selectedRect.id ? { ...rect, stroke: "black" } : rect
+        rect.id === selectedRect?.id ? { ...rect, stroke: "black" } : rect
       );
       setRects(updatedRects);
     }
