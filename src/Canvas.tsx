@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import * as ContextMenu from "@radix-ui/react-context-menu"; // npm install @radix-ui/react-context-menu@latest -Eでダウンロード
+//import * as ContextMenu from "@radix-ui/react-context-menu"; // npm install @radix-ui/react-context-menu@latest -Eでダウンロード
 import "./Canvas.css"; // npm install @radix-ui/colors@latest -Eでダウンロード
 import './Leftsidebar.css';
 
