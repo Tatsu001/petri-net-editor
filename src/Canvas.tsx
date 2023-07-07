@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 //import * as ContextMenu from "@radix-ui/react-context-menu"; // npm install @radix-ui/react-context-menu@latest -Eでダウンロード
 import "./Canvas.css"; // npm install @radix-ui/colors@latest -Eでダウンロード
 import './Leftsidebar.css';
@@ -42,7 +42,7 @@ function Canvas() {
   // 描画部分
   // プレース
   const [circles, setCircles] = useState<Circle[]>([]);
-  const [selectedCircle, setSelectedCircle] = useState<Circle | null>(null);
+  const [selectedCircle, setSelectedCircle] = useState<Circle[]>([]);
   const [isCreatingCircle, setIsCreatingCircle] = useState(false);
 
 
@@ -66,7 +66,7 @@ function Canvas() {
   };
 
   const handleSelectCircle = (circle: Circle) => {
-    setSelectedCircle(circle);
+    setSelectedCircle([...selectedCircle, circle]);
     const updatedCircles = circles.map(c =>
       c.id === circle.id ? {...c, stroke: 'blue'} : c
     );
@@ -90,14 +90,14 @@ function Canvas() {
     if (selectedCircle) {
       const updatedCircles = circles.filter((circle) => circle.stroke !== "blue");
       setCircles(updatedCircles);
-      setSelectedCircle(null);
+      setSelectedCircle([]);
     }
   };
 
 
   // トランジション
   const [rects, setRects] = useState<Rect[]>([]);
-  const [selectedRect, setSelectedRect] = useState<Rect | null>(null);
+  const [selectedRect, setSelectedRect] = useState<Rect[]>([]);
   const [isCreatingRect, setIsCreatingRect] = useState(false);
 
   const handleCreateRectClick = () => {
@@ -121,7 +121,7 @@ function Canvas() {
   };
 
   const handleSelectRect = (rect: Rect) => {
-    setSelectedRect(rect);
+    setSelectedRect([...selectedRect, rect]);
     const updatedRects = rects.map(r =>
       r.id === rect.id ? {...r, stroke: 'blue'} : r
     );
@@ -132,29 +132,27 @@ function Canvas() {
     if (selectedRect) {
       const updatedRects = rects.filter((rect) => rect.stroke !== "blue");
       setRects(updatedRects);
-      setSelectedRect(null);
+      setSelectedRect([]);
     }
   };
 
-  // 円１と円２がある場合，１を選択して青にした後，２を選択すると２つとも青になる
-  // しかし，２を選択するときに１のselectedCircleがはずれてるので，２の選択後に
-  // はずれたところをクリックすると，１が青のままで２が黒になるような処理になってしまう
-  // これらを解決するために，複数選択する場合はコントロールを押して選択するようにする．
   // ここからhandleContextMenuまでcircleとrectは共通処理
   // 選択解除の処理を追加する
   const handleDeselectShape = useCallback((e: MouseEvent) => {
     const target = e.target as HTMLElement;
-    if ((!target.closest("circle") && selectedCircle) || (!target.closest("rect") && selectedRect)) {
+    if (!target.closest("circle") && !target.closest("rect") && selectedCircle) {
       // 円選択解除
-      setSelectedCircle(null);
+      setSelectedCircle([]);
       const updatedCircles = circles.map((circle) =>
-        circle.id === selectedCircle?.id ? { ...circle, stroke: "black" } : circle
+        circle.stroke === "blue" ? { ...circle, stroke: "black" } : circle
       );
       setCircles(updatedCircles);
+    }
+    if (!target.closest("circle") && !target.closest("rect") && selectedRect) {
       // 四角選択解除
-      setSelectedRect(null);
+      setSelectedRect([]);
       const updatedRects = rects.map((rect) =>
-        rect.id === selectedRect?.id ? { ...rect, stroke: "black" } : rect
+        rect.stroke === "blue" ? { ...rect, stroke: "black" } : rect
       );
       setRects(updatedRects);
     }
@@ -170,15 +168,73 @@ function Canvas() {
   
   const handleContextMenu = (e: React.MouseEvent<SVGElement>) => {
     e.preventDefault();
-    if (selectedCircle || selectedRect) {
+    if (selectedCircle.length > 0 || selectedRect.length > 0) {
       const contextMenu = document.getElementById("context-menu");
       if (contextMenu) {
-        contextMenu.style.display = "block";
+        contextMenu.style.display = "black";
         contextMenu.style.top = `${e.clientY}px`;
         contextMenu.style.left = `${e.clientX}px`;
       }
     }
   };
+
+
+  //以下Zoom実装
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const [viewBox, setViewBox] = useState('0 0 900 500');
+  
+  const zoomAtCenter = (event: WheelEvent, svg: SVGSVGElement | null, scale: number) => {
+    const viewBox = svg?.getAttribute('viewBox');
+    const [minX, minY, width, height] = viewBox ? viewBox.split(' ').map(parseFloat) : [0, 0, 100, 100];
+    
+    if (!svg) return;
+    event.preventDefault();
+
+    let x, y;
+    if (event.offsetX) {
+      x = event.offsetX;
+      y = event.offsetY;
+    } else {
+      x = event.clientX - svg.getBoundingClientRect().left;
+      y = event.clientY - svg.getBoundingClientRect().top;
+    }
+
+    const sx = x / svg.clientWidth;
+    const sy = y / svg.clientHeight;
+
+    const newX = minX + width * sx;
+    const newY = minY + height * sy;
+    
+    const scaledWidth = width * scale;
+    const scaledHeight = height * scale;
+    const scaledMinX = newX + scale * (minX - newX);
+    const scaledMinY = newY + scale * (minY - newY);
+
+    const zoomedViewBox = [scaledMinX, scaledMinY, scaledWidth, scaledHeight].join(' ');
+    svg?.setAttribute('viewBox', zoomedViewBox);
+    return {newX, newY};
+  }
+
+  useEffect(() => {
+    const handleWheel = (event: WheelEvent) => {
+      if (!event.ctrlKey) return; // コントロールキーが押されていない場合は処理しない
+      const scale = Math.pow(1.1, event.deltaY < 0 ? -1: 1);
+      zoomAtCenter(event, svgRef.current, scale);
+    };
+
+    const svgElement = svgRef.current;
+    if (svgElement) {
+      svgElement.addEventListener('wheel', handleWheel);
+    }
+
+    return () => {
+      if (svgElement) {
+        svgElement.removeEventListener('wheel', handleWheel);
+      }
+    };
+  }, []);
+
+
 
   return (
   
@@ -233,10 +289,10 @@ function Canvas() {
       </div>
 
       {/* 描画部分 */}
-      <svg width="900" height="500" onClick={(e) => {
+      <svg width={900} height={500} onClick={(e) => {
                                       handleCreateCircle(e);
                                       handleCreateRect(e);
-                                    }}
+                                    }} viewBox={viewBox} ref={svgRef}
       >
         <g>
         {[...Array(10)].map((_, index) => (
@@ -254,7 +310,7 @@ function Canvas() {
               r={circle.r}
               stroke={circle.stroke}
               fill="none"
-              strokeWidth="5"
+              strokeWidth="10"
               onClick={() => handleSelectCircle(circle)}
               //onMouseMove={(e) => handleMoveCircle(e)}
               onContextMenu={(e) => handleContextMenu(e)}
@@ -269,12 +325,12 @@ function Canvas() {
               height={rect.height}
               stroke={rect.stroke}
               fill="none"
-              strokeWidth="5"
+              strokeWidth="10"
               onClick={() => handleSelectRect(rect)} 
               onContextMenu={(e) => handleContextMenu(e)}
             />
           ))}
-            {(selectedCircle || selectedRect) && (
+            {(selectedCircle.length > 0 || selectedRect.length > 0) && (
               <foreignObject className="DeleteButton" id="context-menu" style={{position: "relative"}}>
                 <ul>
                   <li onClick={() => {

@@ -15,7 +15,7 @@ root.render(
     {/*<App />*/}
     {/*<Leftsidebar />*/}
     {/*<Canvas />*/}
-    <Temp3 />
+    <Canvas />
   </React.StrictMode>
 );
 
