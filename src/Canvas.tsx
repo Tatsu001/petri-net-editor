@@ -28,157 +28,6 @@ interface Rect {
 
 function Canvas() {
 
-  // サイドバー部分
-  const [activeSection, setActiveSection] = useState("");
-
-  const handleSidebarClick = (sectionName: string) => {
-    setActiveSection(sectionName);
-  };
-
-  const handleCreatePlace = () => {};
-  const handleCreateTransition = () => {};
-  const handleCreateArc = () => {};
-
-  // 描画部分
-  // プレース
-  const [circles, setCircles] = useState<Circle[]>([]);
-  const [selectedCircle, setSelectedCircle] = useState<Circle[]>([]);
-  const [isCreatingCircle, setIsCreatingCircle] = useState(false);
-
-
-  const handleCreateCircleClick = () => {
-    setIsCreatingCircle(true);
-  }
-
-  const handleCreateCircle = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (isCreatingCircle) {
-      const newCircle: Circle = {
-        id: circles.length,
-        cx: e.nativeEvent.offsetX,
-        cy: e.nativeEvent.offsetY,
-        r: 50,
-        stroke: "black",
-      };
-      setCircles([...circles, newCircle]);
-      setIsCreatingCircle(false);
-    }
-    
-  };
-
-  const handleSelectCircle = (circle: Circle) => {
-    setSelectedCircle([...selectedCircle, circle]);
-    const updatedCircles = circles.map(c =>
-      c.id === circle.id ? {...c, stroke: 'blue'} : c
-    );
-    setCircles(updatedCircles);
-  };
-
-  /*
-  // ドラッグアンドドロップできるようにしたい
-  const handleMoveCircle = (e: React.MouseEvent<SVGCircleElement>) => {
-    if (selectedCircle) {
-      const newCx = e.nativeEvent.offsetX;
-      const newCy = e.nativeEvent.offsetY;
-      const updatedCircles = circles.map((circle) =>
-        circle.id === selectedCircle.id ? { ...circle, cx: newCx, cy: newCy } : circle
-      );
-      setCircles(updatedCircles);
-    }
-  };*/
-
-  const handleDeleteCircle = () => {
-    if (selectedCircle) {
-      const updatedCircles = circles.filter((circle) => circle.stroke !== "blue");
-      setCircles(updatedCircles);
-      setSelectedCircle([]);
-    }
-  };
-
-
-  // トランジション
-  const [rects, setRects] = useState<Rect[]>([]);
-  const [selectedRect, setSelectedRect] = useState<Rect[]>([]);
-  const [isCreatingRect, setIsCreatingRect] = useState(false);
-
-  const handleCreateRectClick = () => {
-    setIsCreatingRect(true);
-  }
-
-  const handleCreateRect = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (isCreatingRect) {
-      const newRect: Rect = {
-        id: rects.length,
-        x: e.nativeEvent.offsetX,
-        y: e.nativeEvent.offsetY,
-        width: 50,
-        height: 50,
-        stroke: "black",
-      };
-      setRects([...rects, newRect]);
-      setIsCreatingRect(false);
-    }
-    
-  };
-
-  const handleSelectRect = (rect: Rect) => {
-    setSelectedRect([...selectedRect, rect]);
-    const updatedRects = rects.map(r =>
-      r.id === rect.id ? {...r, stroke: 'blue'} : r
-    );
-    setRects(updatedRects);
-  };
-
-  const handleDeleteRect = () => {
-    if (selectedRect) {
-      const updatedRects = rects.filter((rect) => rect.stroke !== "blue");
-      setRects(updatedRects);
-      setSelectedRect([]);
-    }
-  };
-
-  // ここからhandleContextMenuまでcircleとrectは共通処理
-  // 選択解除の処理を追加する
-  const handleDeselectShape = useCallback((e: MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (!target.closest("circle") && !target.closest("rect") && selectedCircle) {
-      // 円選択解除
-      setSelectedCircle([]);
-      const updatedCircles = circles.map((circle) =>
-        circle.stroke === "blue" ? { ...circle, stroke: "black" } : circle
-      );
-      setCircles(updatedCircles);
-    }
-    if (!target.closest("circle") && !target.closest("rect") && selectedRect) {
-      // 四角選択解除
-      setSelectedRect([]);
-      const updatedRects = rects.map((rect) =>
-        rect.stroke === "blue" ? { ...rect, stroke: "black" } : rect
-      );
-      setRects(updatedRects);
-    }
-  }, [circles, selectedCircle, rects, selectedRect]);
-
-  // 選択解除の処理を監視するためのuseEffectを追加する
-  useEffect(() => {
-    window.addEventListener('click', handleDeselectShape);
-    return () => {
-      window.removeEventListener('click', handleDeselectShape);
-    };
-  }, [handleDeselectShape]);
-  
-  const handleContextMenu = (e: React.MouseEvent<SVGElement>) => {
-    e.preventDefault();
-    if (selectedCircle.length > 0 || selectedRect.length > 0) {
-      const contextMenu = document.getElementById("context-menu");
-      if (contextMenu) {
-        contextMenu.style.display = "black";
-        contextMenu.style.top = `${e.clientY}px`;
-        contextMenu.style.left = `${e.clientX}px`;
-      }
-    }
-  };
-
-
   //以下Zoom実装
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [viewBox, setViewBox] = useState('0 0 900 500');
@@ -236,6 +85,213 @@ function Canvas() {
 
 
 
+  // サイドバー部分
+  const [activeSection, setActiveSection] = useState("");
+
+  const handleSidebarClick = (sectionName: string) => {
+    setActiveSection(sectionName);
+  };
+
+  const handleCreatePlace = () => {};
+  const handleCreateTransition = () => {};
+  const handleCreateArc = () => {};
+
+  // 描画部分
+  // プレース
+  const [circles, setCircles] = useState<Circle[]>([]);
+  const [selectedCircle, setSelectedCircle] = useState<Circle[]>([]);
+  const [isCreatingCircle, setIsCreatingCircle] = useState(false);
+
+  const handleCreateCircleClick = () => {
+    setIsCreatingCircle(true);
+  }
+
+
+  const handleCreateCircle = (e: React.MouseEvent<SVGSVGElement>, svg: SVGSVGElement | null) => {
+    const viewBox = svg?.getAttribute('viewBox');
+    const [minX, minY, width, height] = viewBox ? viewBox.split(' ').map(parseFloat) : [0, 0, 100, 100];
+    if (!svg) return;
+    e.preventDefault();
+    let x, y;
+    if (e.nativeEvent.offsetX) {
+      x = e.nativeEvent.offsetX;
+      y = e.nativeEvent.offsetY;
+    } else {
+      x = e.clientX - svg.getBoundingClientRect().left;
+      y = e.clientY - svg.getBoundingClientRect().top;
+    }
+
+    const sx = x / svg.clientWidth;
+    const sy = y / svg.clientHeight;
+
+    const newX = minX + width * sx;
+    const newY = minY + height * sy;
+    
+    if (isCreatingCircle) {
+      const newCircle: Circle = {
+        id: circles.length,
+        cx: newX,
+        cy: newY,
+        r: 50,
+        stroke: "black",
+      };
+      setCircles([...circles, newCircle]);
+      setIsCreatingCircle(false);
+    }
+  };
+  useEffect(() => {
+
+  })
+
+  const handleSelectCircle = (circle: Circle) => {
+    setSelectedCircle([...selectedCircle, circle]);
+    const updatedCircles = circles.map(c =>
+      c.id === circle.id ? {...c, stroke: 'blue'} : c
+    );
+    setCircles(updatedCircles);
+  };
+
+  /*
+  // ドラッグアンドドロップできるようにしたい
+  const handleMoveCircle = (e: React.MouseEvent<SVGCircleElement>) => {
+    if (selectedCircle) {
+      const newCx = e.nativeEvent.offsetX;
+      const newCy = e.nativeEvent.offsetY;
+      const updatedCircles = circles.map((circle) =>
+        circle.id === selectedCircle.id ? { ...circle, cx: newCx, cy: newCy } : circle
+      );
+      setCircles(updatedCircles);
+    }
+  };*/
+
+  const handleDeleteCircle = () => {
+    if (selectedCircle) {
+      const updatedCircles = circles.filter((circle) => circle.stroke !== "blue");
+      setCircles(updatedCircles);
+      setSelectedCircle([]);
+    }
+  };
+
+
+  // トランジション
+  const [rects, setRects] = useState<Rect[]>([]);
+  const [selectedRect, setSelectedRect] = useState<Rect[]>([]);
+  const [isCreatingRect, setIsCreatingRect] = useState(false);
+
+  const handleCreateRectClick = () => {
+    setIsCreatingRect(true);
+  }
+
+  const handleCreateRect = (e: React.MouseEvent<SVGSVGElement>, svg: SVGSVGElement | null) => {
+    const viewBox = svg?.getAttribute('viewBox');
+    const [minX, minY, width, height] = viewBox ? viewBox.split(' ').map(parseFloat) : [0, 0, 100, 100];
+    if (!svg) return;
+    e.preventDefault();
+    let x, y;
+    if (e.nativeEvent.offsetX) {
+      x = e.nativeEvent.offsetX;
+      y = e.nativeEvent.offsetY;
+    } else {
+      x = e.clientX - svg.getBoundingClientRect().left;
+      y = e.clientY - svg.getBoundingClientRect().top;
+    }
+
+    const sx = x / svg.clientWidth;
+    const sy = y / svg.clientHeight;
+
+    const newX = minX + width * sx;
+    const newY = minY + height * sy;
+    
+    if (isCreatingRect) {
+      const newRect: Rect = {
+        id: rects.length,
+        x: newX - 25,
+        y: newY - 25,
+        width: 50,
+        height: 50,
+        stroke: "black",
+      };
+      setRects([...rects, newRect]);
+      setIsCreatingRect(false);
+    }
+  };
+
+  const handleSelectRect = (rect: Rect) => {
+    setSelectedRect([...selectedRect, rect]);
+    const updatedRects = rects.map(r =>
+      r.id === rect.id ? {...r, stroke: 'blue'} : r
+    );
+    setRects(updatedRects);
+  };
+
+  const handleDeleteRect = () => {
+    if (selectedRect) {
+      const updatedRects = rects.filter((rect) => rect.stroke !== "blue");
+      setRects(updatedRects);
+      setSelectedRect([]);
+    }
+  };
+
+  // ここからhandleContextMenuまでcircleとrectは共通処理
+  // 選択解除の処理を追加する
+  const handleDeselectShape = useCallback((e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (!target.closest("circle") && !target.closest("rect") && selectedCircle) {
+      // 円選択解除
+      setSelectedCircle([]);
+      const updatedCircles = circles.map((circle) =>
+        circle.stroke === "blue" ? { ...circle, stroke: "black" } : circle
+      );
+      setCircles(updatedCircles);
+    }
+    if (!target.closest("circle") && !target.closest("rect") && selectedRect) {
+      // 四角選択解除
+      setSelectedRect([]);
+      const updatedRects = rects.map((rect) =>
+        rect.stroke === "blue" ? { ...rect, stroke: "black" } : rect
+      );
+      setRects(updatedRects);
+    }
+  }, [circles, selectedCircle, rects, selectedRect]);
+
+  // 選択解除の処理を監視するためのuseEffectを追加する
+  useEffect(() => {
+    window.addEventListener('click', handleDeselectShape);
+    return () => {
+      window.removeEventListener('click', handleDeselectShape);
+    };
+  }, [handleDeselectShape]);
+  
+  const handleContextMenu = (e: React.MouseEvent<SVGElement>, svg: SVGSVGElement | null) => {
+    const viewBox = svg?.getAttribute('viewBox');
+    const [minX, minY, width, height] = viewBox ? viewBox.split(' ').map(parseFloat) : [0, 0, 100, 100];
+    if (!svg) return;
+    e.preventDefault();
+    let x, y;
+    if (e.nativeEvent.offsetX) {
+      x = e.nativeEvent.offsetX;
+      y = e.nativeEvent.offsetY;
+    } else {
+      x = e.clientX - svg.getBoundingClientRect().left;
+      y = e.clientY - svg.getBoundingClientRect().top;
+    }
+
+    const sx = x / svg.clientWidth;
+    const sy = y / svg.clientHeight;
+
+    const newX = minX + width * sx;
+    const newY = minY + height * sy;
+    if (selectedCircle.length > 0 || selectedRect.length > 0) {
+      const contextMenu = document.getElementById("context-menu");
+      if (contextMenu) {
+        contextMenu.style.display = "black";
+        contextMenu.style.top = `${newY}px`;
+        contextMenu.style.left = `${newX}px`;
+      }
+    }
+  };
+
+
   return (
   
     <div>
@@ -290,8 +346,8 @@ function Canvas() {
 
       {/* 描画部分 */}
       <svg width={900} height={500} onClick={(e) => {
-                                      handleCreateCircle(e);
-                                      handleCreateRect(e);
+                                      handleCreateCircle(e, svgRef.current);
+                                      handleCreateRect(e, svgRef.current);
                                     }} viewBox={viewBox} ref={svgRef}
       >
         <g>
@@ -313,7 +369,7 @@ function Canvas() {
               strokeWidth="10"
               onClick={() => handleSelectCircle(circle)}
               //onMouseMove={(e) => handleMoveCircle(e)}
-              onContextMenu={(e) => handleContextMenu(e)}
+              onContextMenu={(e) => handleContextMenu(e, svgRef.current)}
             />
           ))}
           {rects.map((rect) => (
@@ -327,7 +383,7 @@ function Canvas() {
               fill="none"
               strokeWidth="10"
               onClick={() => handleSelectRect(rect)} 
-              onContextMenu={(e) => handleContextMenu(e)}
+              onContextMenu={(e) => handleContextMenu(e, svgRef.current)}
             />
           ))}
             {(selectedCircle.length > 0 || selectedRect.length > 0) && (
