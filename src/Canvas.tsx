@@ -10,7 +10,7 @@ import './Leftsidebar.css';
 // svg詳しい基礎解説 https://www.webdesignleaves.com/pr/html/svg_basic.html
 
 // やること
-// 矢印で繋ぐ
+// 矢印で繋ぐ（ドラッグアンドドロップしても追従するように）
 // 名前と図形紐づけ
 // コントローラ計算
 // コントローラ出力
@@ -30,6 +30,15 @@ interface Rect {
   y: number;
   width: number;
   height: number;
+  stroke: string;
+}
+
+interface Arc {
+  id: number;
+  c_id: number;
+  r_id: number;
+  arrow: -1 | 1;
+  d: string,
   stroke: string;
 }
 
@@ -100,6 +109,7 @@ function Canvas() {
   };
 
   // 描画部分
+  const [selectedShape, setSelectedShape] = useState<string[]>([]); // Arcの向き判別用
   // プレース
   const [circles, setCircles] = useState<Circle[]>([]);
   const [selectedCircle, setSelectedCircle] = useState<Circle[]>([]);
@@ -108,7 +118,6 @@ function Canvas() {
   const handleCreateCircleClick = () => {
     setIsCreatingCircle(true);
   }
-
 
   const handleCreateCircle = (e: React.MouseEvent<SVGSVGElement>, svg: SVGSVGElement | null) => {
     const viewBox = svg?.getAttribute('viewBox');
@@ -141,7 +150,6 @@ function Canvas() {
       setCircles([...circles, newCircle]);
       setIsCreatingCircle(false);
     }
-    console.log(circles);
   };
   useEffect(() => {
 
@@ -153,6 +161,8 @@ function Canvas() {
       c.id === circle.id ? {...c, stroke: 'blue'} : c
     );
     setCircles(updatedCircles);
+    setSelectedShape([...selectedShape, "circle"]);
+    console.log(selectedShape);
   };
 
   const handleDeleteCircle = () => {
@@ -273,6 +283,8 @@ function Canvas() {
       r.id === rect.id ? {...r, stroke: 'blue'} : r
     );
     setRects(updatedRects);
+    setSelectedShape([...selectedShape, "rect"]);
+    console.log(selectedShape);
   };
 
   const handleDeleteRect = () => {
@@ -290,6 +302,7 @@ function Canvas() {
     if (!target.closest("circle") && !target.closest("rect") && selectedCircle) {
       // 円選択解除
       setSelectedCircle([]);
+      setSelectedShape([]);
       const updatedCircles = circles.map((circle) =>
         circle.stroke === "blue" ? { ...circle, stroke: "black" } : circle
       );
@@ -298,6 +311,7 @@ function Canvas() {
     if (!target.closest("circle") && !target.closest("rect") && selectedRect) {
       // 四角選択解除
       setSelectedRect([]);
+      setSelectedShape([]);
       const updatedRects = rects.map((rect) =>
         rect.stroke === "blue" ? { ...rect, stroke: "black" } : rect
       );
@@ -342,14 +356,89 @@ function Canvas() {
     }
   };
 
+
+  // 以下Arc実装
+  const [arcs, setArcs] = useState<Arc[]>([]);
+  const [selectedArc, setSelectedArc] = useState<Arc[]>([]);
   const [isCreatingArc, setIsCreatingArc] = useState(false);
 
   const handleCreateArcClick = () => {
-    setIsCreatingCircle(true);
+    setIsCreatingCircle(false);
+    setIsCreatingRect(false);
+    setIsCreatingArc(true);
+    // 円選択解除
+    setSelectedCircle([]);
+    setSelectedShape([]);
+    const updatedCircles = circles.map((circle) =>
+      circle.stroke === "blue" ? { ...circle, stroke: "black" } : circle
+    );
+    setCircles(updatedCircles);
+    // 四角選択解除
+    setSelectedRect([]);
+    setSelectedShape([]);
+    const updatedRects = rects.map((rect) =>
+      rect.stroke === "blue" ? { ...rect, stroke: "black" } : rect
+    );
+    setRects(updatedRects);
   }
-  const handleCreateArc = () => {
+
+
+  const handleCreateArc = useCallback((e: MouseEvent) => {
     if (!isCreatingArc) return;
-  };
+    if (selectedCircle.length === 1 && selectedRect.length ===1) {
+      const c_id = selectedCircle.map(c => c.id)[0];
+      const r_id = selectedRect.map(r => r.id)[0];
+      const c_position = selectedCircle.map((c) => {return {x: c.cx, y: c.cy, r: c.r}})[0];
+      const r_position = selectedRect.map((r) => {return {x: r.x, y: r.y, w: r.width, h: r.height}})[0];
+      if (selectedShape[0] === "circle" && selectedShape[1] === "rect") {
+        const spx = c_position.x + c_position.r;
+        const spy = c_position.y;
+        const epx = r_position.x;
+        const epy = r_position.y + r_position.h/2;
+        const shx = (spx + epx) / 2;
+        const shy = spy;
+        const ehx = (spx + epx) / 2;
+        const ehy = epy;
+        const newArc: Arc = {
+          id: arcs.length,
+          c_id: c_id,
+          r_id: r_id,
+          arrow: 1,
+          d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`,
+          stroke: "black"
+        };
+        setArcs([...arcs, newArc]);
+        setIsCreatingArc(false);
+      }
+      else if (selectedShape[0] === "rect" && selectedShape[1] === "circle") {
+        const spx = r_position.x + r_position.w;
+        const spy = r_position.y + r_position.h/2;
+        const epx = c_position.x - c_position.r;
+        const epy = c_position.y;
+        const shx = (spx + epx) / 2;
+        const shy = spy;
+        const ehx = (spx + epx) / 2;
+        const ehy = epy;
+        const newArc: Arc = {
+          id: arcs.length,
+          c_id: c_id,
+          r_id: r_id,
+          arrow: -1,
+          d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`,
+          stroke: "black"
+        };
+        setArcs([...arcs, newArc]);
+        setIsCreatingArc(false);
+      }
+    }
+  }, [selectedCircle, selectedRect, selectedShape]);
+
+  useEffect(() => {
+    window.addEventListener('click', handleCreateArc);
+    return () => {
+      window.removeEventListener('click', handleCreateArc);
+    };
+  }, [handleCreateArc]);
 
 
   return (
@@ -377,7 +466,7 @@ function Canvas() {
               <button name="CreateTransition" onClick={handleCreateRectClick}>作成</button>
               <br />
               <h3>アーク作成</h3>
-              <button name="CreateArc" onClick={handleCreateArc}>作成</button>
+              <button name="CreateArc" onClick={handleCreateArcClick}>作成</button>
             </div>
           )}
           {activeSection === "conflict" && (
@@ -448,6 +537,15 @@ function Canvas() {
               onContextMenu={(e) => handleContextMenu(e, svgRef.current)}
               ref={(e) => (svgRectElemRef.current = e ? e: null)}
               onMouseDown={(e) => startDrag(e, svgRectElemRef.current)}
+            />
+          ))}
+          {arcs.map((arc) => (
+            <path
+              key={arc.id}
+              d={arc.d}
+              stroke={arc.stroke}
+              fill="transparent"
+              strokeWidth="3"
             />
           ))}
             {(selectedCircle.length > 0 || selectedRect.length > 0) && (
