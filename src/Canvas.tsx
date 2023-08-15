@@ -9,6 +9,13 @@ import './Leftsidebar.css';
 // svgエディタ作った人 https://hashrock.hatenablog.com/entry/2017/12/04/215559
 // svg詳しい基礎解説 https://www.webdesignleaves.com/pr/html/svg_basic.html
 
+// やること
+// 矢印で繋ぐ
+// 名前と図形紐づけ
+// コントローラ計算
+// コントローラ出力
+// 
+
 interface Circle {
   id: number;
   cx: number;
@@ -92,10 +99,6 @@ function Canvas() {
     setActiveSection(sectionName);
   };
 
-  const handleCreatePlace = () => {};
-  const handleCreateTransition = () => {};
-  const handleCreateArc = () => {};
-
   // 描画部分
   // プレース
   const [circles, setCircles] = useState<Circle[]>([]);
@@ -138,6 +141,7 @@ function Canvas() {
       setCircles([...circles, newCircle]);
       setIsCreatingCircle(false);
     }
+    console.log(circles);
   };
   useEffect(() => {
 
@@ -149,6 +153,14 @@ function Canvas() {
       c.id === circle.id ? {...c, stroke: 'blue'} : c
     );
     setCircles(updatedCircles);
+  };
+
+  const handleDeleteCircle = () => {
+    if (selectedCircle) {
+      const updatedCircles = circles.filter((circle) => circle.stroke !== "blue");
+      setCircles(updatedCircles);
+      setSelectedCircle([]);
+    }
   };
 
   /*
@@ -164,13 +176,52 @@ function Canvas() {
     }
   };*/
 
-  const handleDeleteCircle = () => {
-    if (selectedCircle) {
-      const updatedCircles = circles.filter((circle) => circle.stroke !== "blue");
+  const svgCircleElemRef = useRef<SVGCircleElement | null>(null);
+  const svgRectElemRef = useRef<SVGRectElement | null>(null);
+
+  const startDrag = (
+    event: React.MouseEvent,
+    draggedElem: SVGCircleElement | SVGRectElement | null,
+  ) => {
+    event.preventDefault();
+    if (svgRef.current === null || draggedElem === null) return;
+    const point = svgRef.current.createSVGPoint();
+    point.x = event.clientX;
+    point.y = event.clientY;
+    const cursor = point.matrixTransform(
+      svgRef.current.getScreenCTM()?.inverse()
+    );
+    
+    const mousemove = (event: MouseEvent) => {
+      event.preventDefault();
+      point.x = event.clientX;
+      point.y = event.clientY;
+      const newCursor = point.matrixTransform(
+        svgRef.current?.getScreenCTM()?.inverse()
+      );
+
+      const delta = {x: newCursor.x - cursor.x, y: newCursor.y - cursor.y};
+
+      const updatedCircles = circles.map(c =>
+        c.stroke === "blue" ? {...c, cx: c.cx + delta.x, cy: c.cy + delta.y} : c
+      );
       setCircles(updatedCircles);
-      setSelectedCircle([]);
-    }
-  };
+
+      const updatedRects = rects.map(r =>
+        r.stroke === "blue" ? {...r, x: r.x + delta.x, y: r.y + delta.y} : r
+      );
+      setRects(updatedRects);
+      
+    };
+
+    const mouseup = (event: MouseEvent) => {
+      document.removeEventListener("mousemove", mousemove);
+      document.removeEventListener("mouseup", mouseup);
+    };
+
+    document.addEventListener("mousemove", mousemove);
+    document.addEventListener("mouseup", mouseup);
+  }
 
 
   // トランジション
@@ -291,6 +342,15 @@ function Canvas() {
     }
   };
 
+  const [isCreatingArc, setIsCreatingArc] = useState(false);
+
+  const handleCreateArcClick = () => {
+    setIsCreatingCircle(true);
+  }
+  const handleCreateArc = () => {
+    if (!isCreatingArc) return;
+  };
+
 
   return (
   
@@ -370,6 +430,8 @@ function Canvas() {
               onClick={() => handleSelectCircle(circle)}
               //onMouseMove={(e) => handleMoveCircle(e)}
               onContextMenu={(e) => handleContextMenu(e, svgRef.current)}
+              ref={(e) => (svgCircleElemRef.current = e ? e : null)}
+              onMouseDown={(e) => startDrag(e, svgCircleElemRef.current)}
             />
           ))}
           {rects.map((rect) => (
@@ -384,6 +446,8 @@ function Canvas() {
               strokeWidth="10"
               onClick={() => handleSelectRect(rect)} 
               onContextMenu={(e) => handleContextMenu(e, svgRef.current)}
+              ref={(e) => (svgRectElemRef.current = e ? e: null)}
+              onMouseDown={(e) => startDrag(e, svgRectElemRef.current)}
             />
           ))}
             {(selectedCircle.length > 0 || selectedRect.length > 0) && (
