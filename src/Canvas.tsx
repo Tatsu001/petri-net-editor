@@ -44,6 +44,8 @@ interface Arc {
 
 function Canvas() {
 
+  const BEZIER_PARAM = 1.3; // 小さくすると逆に離れてても小さくくっつく．実験的に調整する．
+
   //以下Zoom実装
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [viewBox, setViewBox] = useState('0 0 900 500');
@@ -233,7 +235,18 @@ function Canvas() {
             const shy = spy;
             const ehx = (spx + epx) / 2;
             const ehy = epy;
-            return {...a, d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`};
+            //3次にする
+            const dx = epx - spx;
+            const dy = epy - spy;
+            const d = Math.sqrt(dx * dx + dy * dy);
+
+            const c1x = spx + (d/BEZIER_PARAM);
+            const c1y = spy;
+            const c2x = epx - (d/BEZIER_PARAM);
+            const c2y = epy;
+
+            return {...a, d: `M${spx},${spy} C${c1x},${c1y} ${c2x},${c2y} ${epx},${epy}`};
+            //return {...a, d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`};
           }
           else if (a.arrow === -1) {
             const spx = r.x + delta.x + r.width;
@@ -244,7 +257,18 @@ function Canvas() {
             const shy = spy;
             const ehx = (spx + epx) / 2;
             const ehy = epy;
-            return {...a, d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`};
+            //3次にする
+            const dx = epx - spx;
+            const dy = epy - spy;
+            const d = Math.sqrt(dx * dx + dy * dy);
+
+            const c1x = spx + (d/BEZIER_PARAM);
+            const c1y = spy;
+            const c2x = epx - (d/BEZIER_PARAM);
+            const c2y = epy;
+
+            return {...a, d: `M${spx},${spy} C${c1x},${c1y} ${c2x},${c2y} ${epx},${epy}`};
+            //return {...a, d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`};
           }
         }
         else if (selectedCircle_id.includes(circle_with_a.id) && !selectedRect_id.includes(rect_with_a.id)){
@@ -257,7 +281,18 @@ function Canvas() {
             const shy = spy;
             const ehx = (spx + epx) / 2;
             const ehy = epy;
-            return {...a, d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`};
+            //3次にする
+            const dx = epx - spx;
+            const dy = epy - spy;
+            const d = Math.sqrt(dx * dx + dy * dy);
+
+            const c1x = spx + (d/BEZIER_PARAM);
+            const c1y = spy;
+            const c2x = epx - (d/BEZIER_PARAM);
+            const c2y = epy;
+
+            return {...a, d: `M${spx},${spy} C${c1x},${c1y} ${c2x},${c2y} ${epx},${epy}`};
+            //return {...a, d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`};
           }
           else if (a.arrow === -1) {
             const spx = r.x + r.width;
@@ -268,7 +303,18 @@ function Canvas() {
             const shy = spy;
             const ehx = (spx + epx) / 2;
             const ehy = epy;
-            return {...a, d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`};
+            //3次にする
+            const dx = epx - spx;
+            const dy = epy - spy;
+            const d = Math.sqrt(dx * dx + dy * dy);
+
+            const c1x = spx + (d/BEZIER_PARAM);
+            const c1y = spy;
+            const c2x = epx - (d/BEZIER_PARAM);
+            const c2y = epy;
+
+            return {...a, d: `M${spx},${spy} C${c1x},${c1y} ${c2x},${c2y} ${epx},${epy}`};
+            //return {...a, d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`};
           }
         }
         else if (!selectedCircle_id.includes(circle_with_a.id) && selectedRect_id.includes(rect_with_a.id)) {
@@ -281,7 +327,18 @@ function Canvas() {
             const shy = spy;
             const ehx = (spx + epx) / 2;
             const ehy = epy;
-            return {...a, d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`};
+            //3次にする
+            const dx = epx - spx;
+            const dy = epy - spy;
+            const d = Math.sqrt(dx * dx + dy * dy);
+
+            const c1x = spx + (d/BEZIER_PARAM);
+            const c1y = spy;
+            const c2x = epx - (d/BEZIER_PARAM);
+            const c2y = epy;
+
+            return {...a, d: `M${spx},${spy} C${c1x},${c1y} ${c2x},${c2y} ${epx},${epy}`};
+            //return {...a, d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`};
           }
           else if (a.arrow === -1) {
             const spx = r.x + delta.x + r.width;
@@ -292,7 +349,18 @@ function Canvas() {
             const shy = spy;
             const ehx = (spx + epx) / 2;
             const ehy = epy;
-            return {...a, d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`};
+            //3次にする
+            const dx = epx - spx;
+            const dy = epy - spy;
+            const d = Math.sqrt(dx * dx + dy * dy);
+
+            const c1x = spx + (d/BEZIER_PARAM);
+            const c1y = spy;
+            const c2x = epx - (d/BEZIER_PARAM);
+            const c2y = epy;
+
+            return {...a, d: `M${spx},${spy} C${c1x},${c1y} ${c2x},${c2y} ${epx},${epy}`};
+            //return {...a, d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`};
           }
         }
         return a;
@@ -416,12 +484,24 @@ function Canvas() {
         const shy = spy;
         const ehx = (spx + epx) / 2;
         const ehy = epy;
+
+        //3次にする
+        const dx = epx - spx;
+        const dy = epy - spy;
+        const d = Math.sqrt(dx * dx + dy * dy);
+
+        const c1x = spx + (d/BEZIER_PARAM);
+        const c1y = spy;
+        const c2x = epx - (d/BEZIER_PARAM);
+        const c2y = epy;
+
         const newArc: Arc = {
           id: arcs.length,
           c_id: c_id,
           r_id: r_id,
           arrow: 1,
-          d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`,
+          d: //`M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`,
+          `M${spx},${spy} C${c1x},${c1y} ${c2x},${c2y} ${epx},${epy}`,
           stroke: "black"
         };
         setArcs([...arcs, newArc]);
@@ -436,12 +516,23 @@ function Canvas() {
         const shy = spy;
         const ehx = (spx + epx) / 2;
         const ehy = epy;
+
+        //3次にする
+        const dx = epx - spx;
+        const dy = epy - spy;
+        const d = Math.sqrt(dx * dx + dy * dy);
+
+        const c1x = spx + (d/BEZIER_PARAM);
+        const c1y = spy;
+        const c2x = epx - (d/BEZIER_PARAM);
+        const c2y = epy;
         const newArc: Arc = {
           id: arcs.length,
           c_id: c_id,
           r_id: r_id,
           arrow: -1,
-          d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`,
+          d: //`M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`,
+          `M${spx},${spy} C${c1x},${c1y} ${c2x},${c2y} ${epx},${epy}`,
           stroke: "black"
         };
         setArcs([...arcs, newArc]);

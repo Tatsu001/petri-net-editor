@@ -4,7 +4,7 @@ import './index.css';
 import App from './App';
 import Leftsidebar from './Leftsidebar';
 import Canvas from './Canvas';
-import Temp3 from './Temp3';
+import Temp from './Temp';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(

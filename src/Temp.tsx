@@ -30,7 +30,7 @@ function Temp() {
     };
     const newCircle2: Circle = {
         id: 2,
-        cx: 500,
+        cx: 200,
         cy: 400,
         r: 50,
     };
@@ -41,11 +41,21 @@ function Temp() {
         const spy = circle1.cy;
         const epx = circle2.cx - circle2.r;
         const epy = circle2.cy;
-        const shx = (spx + epx) / 2;
+        const shx = (spx + epx) * 2;
         const shy = spy;
         const ehx = (spx + epx) / 2;
         const ehy = epy;
-        setBezier(`M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`);
+
+        const dx = epx - spx;
+        const dy = epy - spy;
+        const d = Math.sqrt(dx * dx + dy * dy);
+
+        const c1x = spx + (d/1.5);
+        const c1y = spy;
+        const c2x = epx - (d/1.5);
+        const c2y = epy;
+        //setBezier(`M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`);
+        setBezier(`M${spx},${spy} C${c1x},${c1y} ${c2x},${c2y} ${epx},${epy}`);
     }
 
     return(
