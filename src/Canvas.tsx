@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 //import * as ContextMenu from "@radix-ui/react-context-menu"; // npm install @radix-ui/react-context-menu@latest -Eでダウンロード
 import "./Canvas.css"; // npm install @radix-ui/colors@latest -Eでダウンロード
 import './Leftsidebar.css';
+import { Arrow } from "@radix-ui/react-context-menu";
 
 // foreignobject使用したらsvg内にhtml要素を配置できる（Chrome, FireFoxのみ）
 // foreignObjectによるXHTMLの埋め込みできる　https://atmarkit.itmedia.co.jp/ait/articles/1206/01/news143_5.html
@@ -10,7 +11,6 @@ import './Leftsidebar.css';
 // svg詳しい基礎解説 https://www.webdesignleaves.com/pr/html/svg_basic.html
 
 // やること
-// 矢印で繋ぐ（ドラッグアンドドロップしても追従するように）
 // 名前と図形紐づけ
 // コントローラ計算
 // コントローラ出力
@@ -204,7 +204,7 @@ function Canvas() {
 
       const delta = {x: newCursor.x - cursor.x, y: newCursor.y - cursor.y};
 
-      const updatedCircles = circles.map(c =>
+      const updatedCircles = circles.map((c) => 
         c.stroke === "blue" ? {...c, cx: c.cx + delta.x, cy: c.cy + delta.y} : c
       );
       setCircles(updatedCircles);
@@ -214,34 +214,91 @@ function Canvas() {
       );
       setRects(updatedRects);
 
-      const c_id = circles.map(c => c.stroke === "blue" ? c.id : null);
-      const r_id = rects.map(r => r.stroke === "blue" ? r.id : null);
-      const should_move_arc_id_for_circles = arcs.map(a => c_id.map(c_id => a.c_id === c_id ? a.id : null))[0];
-      const should_move_arc_id_for_rects = arcs.map(a => r_id.map(r_id => a.r_id === r_id ? a.id : null))[0];
       //  1ならcircleがstart，rectがend
       // -1ならrectがstart，circleがend
-      // Circle,Rect型の情報を取るべき？だと思う
-      const updateArcs = arcs.map((a) => {
-        if (a.arrow === 1) {
-          if (should_move_arc_id_for_circles.includes(a.id)) {
-            //start動かす
-            //return {...a, d: }
+      const updatedArcs = arcs.map(a => {
+        const circle_with_a = circles.filter(c => c.id === a.c_id)[0]; // このアークとつながってるプレース
+        const rect_with_a = rects.filter(r => r.id === a.r_id)[0]; 
+        const c = circle_with_a;
+        const r = rect_with_a;
+        const selectedCircle_id = selectedCircle.map(c => c.id);
+        const selectedRect_id = selectedRect.map(r => r.id);
+        if (selectedCircle_id.includes(circle_with_a.id) && selectedRect_id.includes(rect_with_a.id)) {
+          if (a.arrow === 1) {
+            const spx = c.cx + delta.x + c.r;
+            const spy = c.cy + delta.y;
+            const epx = r.x + delta.x;
+            const epy = r.y + delta.y + r.height/2;
+            const shx = (spx + epx) / 2;
+            const shy = spy;
+            const ehx = (spx + epx) / 2;
+            const ehy = epy;
+            return {...a, d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`};
           }
-          if (should_move_arc_id_for_rects.includes(a.id)) {
-            //end動かす
+          else if (a.arrow === -1) {
+            const spx = r.x + delta.x + r.width;
+            const spy = r.y + delta.y + r.height/2;
+            const epx = c.cx + delta.x - c.r;
+            const epy = c.cy + delta.y;
+            const shx = (spx + epx) / 2;
+            const shy = spy;
+            const ehx = (spx + epx) / 2;
+            const ehy = epy;
+            return {...a, d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`};
           }
         }
-        else if (a.arrow === -1) {
-          if (should_move_arc_id_for_rects.includes(a.id)) {
-            //start動かす
+        else if (selectedCircle_id.includes(circle_with_a.id) && !selectedRect_id.includes(rect_with_a.id)){
+          if (a.arrow === 1) {
+            const spx = c.cx + delta.x + c.r;
+            const spy = c.cy + delta.y;
+            const epx = r.x;
+            const epy = r.y + r.height/2;
+            const shx = (spx + epx) / 2;
+            const shy = spy;
+            const ehx = (spx + epx) / 2;
+            const ehy = epy;
+            return {...a, d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`};
           }
-          if (should_move_arc_id_for_circles.includes(a.id)) {
-            //end動かす
+          else if (a.arrow === -1) {
+            const spx = r.x + r.width;
+            const spy = r.y + r.height/2;
+            const epx = c.cx + delta.x - c.r;
+            const epy = c.cy + delta.y;
+            const shx = (spx + epx) / 2;
+            const shy = spy;
+            const ehx = (spx + epx) / 2;
+            const ehy = epy;
+            return {...a, d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`};
           }
         }
-
+        else if (!selectedCircle_id.includes(circle_with_a.id) && selectedRect_id.includes(rect_with_a.id)) {
+          if (a.arrow === 1) {
+            const spx = c.cx + c.r;
+            const spy = c.cy;
+            const epx = r.x + delta.x;
+            const epy = r.y + delta.y + r.height/2;
+            const shx = (spx + epx) / 2;
+            const shy = spy;
+            const ehx = (spx + epx) / 2;
+            const ehy = epy;
+            return {...a, d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`};
+          }
+          else if (a.arrow === -1) {
+            const spx = r.x + delta.x + r.width;
+            const spy = r.y + delta.y + r.height/2;
+            const epx = c.cx - c.r;
+            const epy = c.cy;
+            const shx = (spx + epx) / 2;
+            const shy = spy;
+            const ehx = (spx + epx) / 2;
+            const ehy = epy;
+            return {...a, d: `M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`};
+          }
+        }
+        return a;
       });
-
+      setArcs(updatedArcs);
+      
     };
 
     const mouseup = (event: MouseEvent) => {
@@ -420,7 +477,7 @@ function Canvas() {
   // 選択解除の処理を追加する
   const handleDeselectShape = useCallback((e: MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (!target.closest("circle") && !target.closest("rect") && !target.closest("path") && selectedCircle) {
+    if (!target.closest("circle") && !target.closest("rect") && !target.closest("path") && selectedCircle.length > 0) {
       // 円選択解除
       setSelectedCircle([]);
       setSelectedShape([]);
@@ -429,7 +486,7 @@ function Canvas() {
       );
       setCircles(updatedCircles);
     }
-    if (!target.closest("circle") && !target.closest("rect") && !target.closest("path") && selectedRect) {
+    if (!target.closest("circle") && !target.closest("rect") && !target.closest("path") && selectedRect.length > 0) {
       // 四角選択解除
       setSelectedRect([]);
       setSelectedShape([]);
@@ -438,7 +495,7 @@ function Canvas() {
       );
       setRects(updatedRects);
     }
-    if (!target.closest("circle") && !target.closest("rect") && !target.closest("path") && selectedArc) {
+    if (!target.closest("circle") && !target.closest("rect") && !target.closest("path") && selectedArc.length > 0) {
       // 矢印選択解除
       setSelectedArc([]);
       const updatedArcs = arcs.map((arc) =>
