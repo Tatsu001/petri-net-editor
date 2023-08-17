@@ -11,10 +11,8 @@ import { Arrow } from "@radix-ui/react-context-menu";
 // svg詳しい基礎解説 https://www.webdesignleaves.com/pr/html/svg_basic.html
 
 // やること
-// 名前と図形紐づけ
 // コントローラ計算
 // コントローラ出力
-// 
 
 interface Circle {
   id: number;
@@ -22,6 +20,7 @@ interface Circle {
   cy: number;
   r: number;
   stroke: string;
+  name: string,
 }
 
 interface Rect {
@@ -31,6 +30,7 @@ interface Rect {
   width: number;
   height: number;
   stroke: string;
+  name: string;
 }
 
 interface Arc {
@@ -116,6 +116,7 @@ function Canvas() {
   const [circles, setCircles] = useState<Circle[]>([]);
   const [selectedCircle, setSelectedCircle] = useState<Circle[]>([]);
   const [isCreatingCircle, setIsCreatingCircle] = useState(false);
+  const [circleName, setCircleName] = useState("");
 
   const handleCreateCircleClick = () => {
     setIsCreatingCircle(true);
@@ -148,16 +149,15 @@ function Canvas() {
         id: circles.length,
         cx: newX,
         cy: newY,
-        r: 50,
+        r: placeR,
         stroke: "black",
+        name: circleName,
       };
       setCircles([...circles, newCircle]);
       setIsCreatingCircle(false);
+      setCircleName("");
     }
   };
-  useEffect(() => {
-
-  })
 
   const handleSelectCircle = (circle: Circle) => {
     setSelectedCircle([...selectedCircle, circle]);
@@ -383,6 +383,7 @@ function Canvas() {
   const [rects, setRects] = useState<Rect[]>([]);
   const [selectedRect, setSelectedRect] = useState<Rect[]>([]);
   const [isCreatingRect, setIsCreatingRect] = useState(false);
+  const [rectName, setRectName] = useState("");
 
   const handleCreateRectClick = () => {
     setIsCreatingCircle(false);
@@ -413,14 +414,16 @@ function Canvas() {
     if (isCreatingRect) {
       const newRect: Rect = {
         id: rects.length,
-        x: newX - 25,
-        y: newY - 25,
-        width: 50,
-        height: 50,
+        x: newX - transitionWidth/2,
+        y: newY - transitionHeight/2,
+        width: transitionWidth,
+        height: transitionHeight,
         stroke: "black",
+        name: rectName,
       };
       setRects([...rects, newRect]);
       setIsCreatingRect(false);
+      setRectName("");
     }
   };
 
@@ -634,6 +637,65 @@ function Canvas() {
   };
 
 
+  // 設定
+  // プレース
+  const [placeR, setPlaceR] = useState(20);
+  const changePlaceR = (x: string) => {
+    setPlaceR(Number(x));
+    const updatedCircle = circles.map((c) => {return {...c, r: placeR}});
+    setCircles(updatedCircle);
+  }
+  const [placeStrokeWidth, setPlaceStrokeWidth] = useState(3);
+  const changePlaceStrokeWidth = (x: string) => {
+    setPlaceStrokeWidth(Number(x));
+  }
+  // トランジション
+  const [transitionWidth, setTransitionWidth] = useState(10);
+  const changeTransitionWidth = (x: string) => {
+    setTransitionWidth(Number(x));
+    const updatedRects = rects.map((r) => {return {...r, width: transitionWidth}});
+    setRects(updatedRects);
+  }
+  const [transitionHeight, setTransitionHeight] = useState(40);
+  const changeTransitionHeight = (x: string) => {
+    setTransitionHeight(Number(x));
+    const updatedRects = rects.map((r) => {return {...r, height: transitionHeight}});
+    setRects(updatedRects);
+  }
+  const [transitionStrokeWidth, setTransitionStrokeWidth] = useState(3);
+  const changeTransitionStrokeWidth = (x: string) => {
+    setTransitionStrokeWidth(Number(x));
+  }
+  // アーク
+  const [arcStrokeWidth, setArcStrokeWidth] = useState(2);
+  const changeArcStrokeWidth = (x: string) => {
+    setArcStrokeWidth(Number(x));
+  }
+  // 文字サイズ
+  const [nameFontSize, setNameFontSize] = useState(20);
+  const changeNameFontSize = (x: string) => {
+    setNameFontSize(Number(x));
+  }
+  // プレース・トランジション名XY調整
+  const [placeNameX, setPlaceNameX] = useState(0);
+  const changePlaceNameX = (x: string) => {
+    setPlaceNameX(Number(x));
+  };
+  const [placeNameY, setPlaceNameY] = useState(10);
+  const changePlaceNameY = (y: string) => {
+    setPlaceNameY(Number(y));
+  };
+  const [transitionNameX, setTransitionNameX] = useState(0);
+  const changeTransitionNameX = (x: string) => {
+    setTransitionNameX(Number(x));
+  };
+  const [transitionNameY, setTransitionNameY] = useState(10);
+  const changeTransitionNameY = (y: string) => {
+    setTransitionNameY(Number(y));
+  };
+  
+
+
   return (
   
     <div>
@@ -646,16 +708,29 @@ function Canvas() {
           <li className={activeSection === "controller" ? "active" : ""} onClick={() => handleSidebarClick("controller")}>コントローラ生成</li>
           <li className={activeSection === "ladder" ? "active" : ""} onClick={() => handleSidebarClick("ladder")}>ラダー図へ変換</li>
           <li className={activeSection === "file" ? "active" : ""} onClick={() => handleSidebarClick("file")}>ファイル操作</li>
+          <li className={activeSection === "setting" ? "active" : ""} onClick={() => handleSidebarClick("setting")}>描画設定</li>
         </ul>
         <div className="Rightsidebar">
           {activeSection === "model" && (
             <div className='CreateModel'>
               <h3>プレース作成</h3>
-              <input type="text" name="PlaceName" />
+              <input
+                type="text"
+                name="PlaceName"
+                value={circleName}
+                onChange={(e) => setCircleName(e.target.value)}
+                placeholder="Enter place name"  
+              />
               <button name="CreatePlace" onClick={handleCreateCircleClick}>作成</button>
               <br />
               <h3>トランジション作成</h3>
-              <input type="text" name="TransitionName" />
+              <input
+                type="text"
+                name="TransitionName"
+                value={rectName}
+                onChange={(e) => setRectName(e.target.value)}
+                placeholder="Enter transition name"
+              />
               <button name="CreateTransition" onClick={handleCreateRectClick}>作成</button>
               <br />
               <h3>アーク作成</h3>
@@ -683,6 +758,41 @@ function Canvas() {
               <button name='FileUpload'>ファイルをアップロード</button>
             </div>
           )}
+          {activeSection === "setting" && (
+            <div className='DrawSetting'>
+              <h3>プレース設定</h3>
+              <h5>半径</h5>
+              <input type="number" value={placeR} min="1" max="100" onChange={(e) => changePlaceR(e.target.value)}/>
+              <h5>太さ</h5>
+              <input type="number" value={placeStrokeWidth} min="1" max="30" onChange={(e) => changePlaceStrokeWidth(e.target.value)}/>
+
+              <h3>トランジション設定</h3>
+              <h5>幅</h5>
+              <input type="number" value={transitionWidth} min="1" max="50" onChange={(e) => changeTransitionWidth(e.target.value)}/>
+              <h5>高さ</h5>
+              <input type="number" value={transitionHeight} min="1" max="50" onChange={(e) => changeTransitionHeight(e.target.value)}/>
+              <h5>太さ</h5>
+              <input type="number" value={transitionStrokeWidth} min="1" max="30" onChange={(e) => changeTransitionStrokeWidth(e.target.value)}/>
+
+              <h3>アーク設定</h3>
+              <h5>太さ</h5>
+              <input type="number" value={arcStrokeWidth} min="1" max="30" onChange={(e) => changeArcStrokeWidth(e.target.value)}/>
+
+              <h3>文字設定</h3>
+              <h5>文字サイズ</h5>
+              <input type="number" value={nameFontSize} min="1" max="100" onChange={(e) => changeNameFontSize(e.target.value)}/>
+              <h5>プレース名XY調整</h5>
+              <h6>X方向</h6>
+              <input type="range" value={placeNameX} min="-40" max="40" onChange={(e) => changePlaceNameX(e.target.value)}/>
+              <h6>Y方向</h6>
+              <input type="range" value={placeNameY} min="-30" max="50" onChange={(e) => changePlaceNameY(e.target.value)}/>
+              <h5>トランジション名XY調整</h5>
+              <h6>X方向</h6>
+              <input type="range" value={transitionNameX} min="-40" max="40" onChange={(e) => changeTransitionNameX(e.target.value)}/>
+              <h6>Y方向</h6>
+              <input type="range" value={transitionNameY} min="-30" max="50" onChange={(e) => changeTransitionNameY(e.target.value)}/>
+            </div>
+          )}
         </div>
       </div>
 
@@ -701,35 +811,42 @@ function Canvas() {
         ))}
         <line x1={300} y1={300} x2={400} y2={400} stroke="black"></line>
         {circles.map((circle) => (
-            <circle
-              key={circle.id}
-              cx={circle.cx}
-              cy={circle.cy}
-              r={circle.r}
-              stroke={circle.stroke}
-              fill="none"
-              strokeWidth="10"
-              onClick={() => handleSelectCircle(circle)}
-              onContextMenu={(e) => handleContextMenu(e, svgRef.current)}
-              ref={(e) => (svgCircleElemRef.current = e ? e : null)}
-              onMouseDown={(e) => startDrag(e, svgCircleElemRef.current)}
-            />
+            <g key={"circle-svg"+circle.id}>
+              <circle
+                key={circle.id}
+                cx={circle.cx}
+                cy={circle.cy}
+                r={circle.r}
+                stroke={circle.stroke}
+                fill="transparent" // noneでもok?
+                strokeWidth={placeStrokeWidth}
+                onClick={() => handleSelectCircle(circle)}
+                onContextMenu={(e) => handleContextMenu(e, svgRef.current)}
+                ref={(e) => (svgCircleElemRef.current = e ? e : null)}
+                onMouseDown={(e) => startDrag(e, svgCircleElemRef.current)}
+              />
+              <text x={circle.cx + placeNameX} y={circle.cy - circle.r - placeNameY} fontSize={nameFontSize} textAnchor="middle">{circle.name}</text>
+            </g>
           ))}
           {rects.map((rect) => (
-            <rect
-              key={rect.id}
-              x={rect.x}
-              y={rect.y}
-              width={rect.width}
-              height={rect.height}
-              stroke={rect.stroke}
-              fill="none"
-              strokeWidth="10"
-              onClick={() => handleSelectRect(rect)} 
-              onContextMenu={(e) => handleContextMenu(e, svgRef.current)}
-              ref={(e) => (svgRectElemRef.current = e ? e: null)}
-              onMouseDown={(e) => startDrag(e, svgRectElemRef.current)}
-            />
+            <g key={"rect-svg"+rect.id}>
+              <rect
+                key={rect.id}
+                x={rect.x}
+                y={rect.y}
+                width={rect.width}
+                height={rect.height}
+                stroke={rect.stroke}
+                fill="transparent"
+                strokeWidth={transitionStrokeWidth}
+                onClick={() => handleSelectRect(rect)} 
+                onContextMenu={(e) => handleContextMenu(e, svgRef.current)}
+                ref={(e) => (svgRectElemRef.current = e ? e: null)}
+                onMouseDown={(e) => startDrag(e, svgRectElemRef.current)}
+              />
+              <text x={rect.x + rect.width/2 + transitionNameX} y={rect.y - transitionNameY} fontSize={nameFontSize} textAnchor="middle">{rect.name}</text>
+            </g>
+            
           ))}
           {arcs.map((arc) => (
             <path
@@ -739,7 +856,7 @@ function Canvas() {
               onClick={() => handleSelectArc(arc)}
               onContextMenu={(e) => handleContextMenu(e, svgRef.current)}
               fill="transparent"
-              strokeWidth="3"
+              strokeWidth={arcStrokeWidth}
             />
           ))}
             {(selectedCircle.length > 0 || selectedRect.length > 0) && (

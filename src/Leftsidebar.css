@@ -112,3 +112,20 @@
     border-radius: 5px;
   }
   
+  .Rightsidebar h5 {
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+  .Rightsidebar h6 {
+    margin-top: 0px;
+    margin-bottom: 0px;
+  }
+  .Rightsidebar h3 {
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+  .Rightsidebar div {
+    width: 100%;
+    overflow: auto;
+    text-align: center;
+  }
