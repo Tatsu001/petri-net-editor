@@ -822,6 +822,7 @@ function Canvas() {
     const array_2d: number[][] = [];
     let pushed_some = false;
     circles.forEach(c => {
+      array_1d = [];// array_1dを初期化
       rects.forEach(r => {
         pushed_some = false;
         console.log("hi");
@@ -845,7 +846,6 @@ function Canvas() {
           }
       })
       array_2d.push(array_1d);// array_2dにarray1dをpush
-      array_1d = [];// array_1dを初期化
     });
     setD(array_2d);
     console.log(array_2d);
@@ -868,6 +868,20 @@ function Canvas() {
     });
     setL(arrayForConflict);
     console.log(arrayForConflict);
+
+    var arrayForDL = [];
+    for (var i = 0; i < array_1d.length; i++){
+      arrayForDL[i] = 0; // 初期化
+    }
+    
+    // コントローラの計算
+    for (var i = 0; i < array_1d.length; i++) {
+      for (var j = 0; j < array_2d.length; j++) {
+        arrayForDL[i] += (-1*arrayForConflict[j]) * array_2d[j][i];
+      }
+    }
+    console.log(arrayForDL);
+    setDc(arrayForDL);
   }
 
 
