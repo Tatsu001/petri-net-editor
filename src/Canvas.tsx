@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import "./Canvas.css"; // npm install @radix-ui/colors@latest -Eでダウンロード
 import './Leftsidebar.css';
 import { Arrow } from "@radix-ui/react-context-menu";
+import { NumericLiteral } from "typescript";
 
 // foreignobject使用したらsvg内にhtml要素を配置できる（Chrome, FireFoxのみ）
 // foreignObjectによるXHTMLの埋め込みできる　https://atmarkit.itmedia.co.jp/ait/articles/1206/01/news143_5.html
@@ -10,9 +11,18 @@ import { Arrow } from "@radix-ui/react-context-menu";
 // svgエディタ作った人 https://hashrock.hatenablog.com/entry/2017/12/04/215559
 // svg詳しい基礎解説 https://www.webdesignleaves.com/pr/html/svg_basic.html
 
+// マウスイベントはmouseDown, mouseUp, onClickの順番で動作する．
+// また人間側の意味のクリック（短時間でボタンかちっ）とドラッグアンドドロップ（長時間でボタンかちっ）
+// はPCからすればどちらも同じ動きなのでクリックしたつもりでもめちゃくちゃ短いドラッグアンドドロップだと思われてしまう
+// だからクリックしたときにもmouseDownに設定しているstartDragが呼び出されてしまう．
+// つまりドロップしたときにblueからblackに戻ってしまう現象はisDraggingのドラッギング状態を管理することでは，解決できない
+// クリックとドラッグアンドドロップをPC側が区別できるようにしない限り他の方法でも解決できない．
+// だから今はクリックしなおしで選択解除することはやめて，間違えたら一度全解除する仕様にする．その方が気持ち悪くない
+
 // やること
 // コントローラ計算
 // コントローラ出力
+// 図形を範囲選択できるようにする
 
 interface Circle {
   id: number;
@@ -23,6 +33,36 @@ interface Circle {
   name: string,
 }
 
+// Circle型かを判定する型ガード関数
+function isCircle(value: unknown): value is Circle {
+  // 値がオブジェクトであるかの判定
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  const { id, cx, cy, r, stroke, name } = value as Record<keyof Circle, unknown>;
+  // nameプロパティーが文字列型かを判定
+  if (typeof id !== "number") {
+    return false;
+  }
+  // gradeプロパティーが数値型かを判定
+  if (typeof cx !== "number") {
+    return false;
+  }
+  if (typeof cy !== "number") {
+    return false;
+  }
+  if (typeof r !== "number") {
+    return false;
+  }
+  if (typeof stroke !== "string") {
+    return false;
+  }
+  if (typeof name !== "string") {
+    return false;
+  }
+  return true;
+}
+
 interface Rect {
   id: number;
   x: number;
@@ -31,6 +71,39 @@ interface Rect {
   height: number;
   stroke: string;
   name: string;
+}
+
+// Circle型かを判定する型ガード関数
+function isRect(value: unknown): value is Rect {
+  // 値がオブジェクトであるかの判定
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  const { id, x, y, width, height, stroke, name } = value as Record<keyof Rect, unknown>;
+  // nameプロパティーが文字列型かを判定
+  if (typeof id !== "number") {
+    return false;
+  }
+  // gradeプロパティーが数値型かを判定
+  if (typeof x !== "number") {
+    return false;
+  }
+  if (typeof y !== "number") {
+    return false;
+  }
+  if (typeof width !== "number") {
+    return false;
+  }
+  if (typeof height !== "number") {
+    return false;
+  }
+  if (typeof stroke !== "string") {
+    return false;
+  }
+  if (typeof name !== "string") {
+    return false;
+  }
+  return true;
 }
 
 interface Arc {
@@ -118,6 +191,8 @@ function Canvas() {
   const [isCreatingCircle, setIsCreatingCircle] = useState(false);
   const [circleName, setCircleName] = useState("");
 
+  const [conflictedCircle, setConflictedCircle] = useState<Circle[]>([]);
+
   const handleCreateCircleClick = () => {
     setIsCreatingCircle(true);
     setIsCreatingRect(false);
@@ -159,21 +234,40 @@ function Canvas() {
     }
   };
 
-  const handleSelectCircle = (circle: Circle) => {
-    setSelectedCircle([...selectedCircle, circle]);
-    const updatedCircles = circles.map(c =>
-      c.id === circle.id ? {...c, stroke: 'blue'} : c
-    );
-    setCircles(updatedCircles);
-    setSelectedShape([...selectedShape, "circle"]);
-    console.log(selectedShape);
-  };
-
-  const handleDeleteCircle = () => {
-    if (selectedCircle) {
-      const updatedCircles = circles.filter((circle) => circle.stroke !== "blue");
+  const handleSelectCircle = (circle: Circle) => {   
+    // 競合選択用
+    if (activeSection === "conflict") {
+      console.log(activeSection);
+      setIsCreatingCircle(false);
+      setIsCreatingRect(false);
+      setIsCreatingArc(false);
+      setConflictedCircle([...conflictedCircle, circle]);
+      const updatedCircles = circles.map(c => {
+        if (c.id === circle.id && circle.stroke === "black") {
+          return {...c, stroke: "orange"};
+        }
+        else if (c.id === circle.id && circle.stroke === "orange") {
+          return {...c, stroke: "black"};
+        }
+        return c
+      });
       setCircles(updatedCircles);
-      setSelectedCircle([]);
+    }
+    else if (activeSection === "model") { // 競合選択じゃないとき
+      setSelectedCircle([...selectedCircle, circle]);
+      console.log("onClick");
+      /*const updatedCircles = circles.map(c => {
+        if (c.id === circle.id && circle.stroke === "black") {
+          return {...c, stroke: "blue"};
+        }
+        else if (c.id === circle.id && circle.stroke === "blue") {
+          return {...c, stroke: "black"};
+        }
+        return c
+      });*/
+      const updatedCircles = circles.map(c => c.id === circle.id ? {...c, stroke: "blue"} : c);
+      setCircles(updatedCircles);
+      setSelectedShape([...selectedShape, "circle"]);
     }
   };
 
@@ -188,6 +282,7 @@ function Canvas() {
     draggedElem: SVGCircleElement | SVGRectElement | null,
   ) => {
     event.preventDefault();
+    console.log("Start Drag");
     if (svgRef.current === null || draggedElem === null) return;
     const point = svgRef.current.createSVGPoint();
     point.x = event.clientX;
@@ -197,6 +292,7 @@ function Canvas() {
     );
     
     const mousemove = (event: MouseEvent) => {
+      console.log("moving");
       event.preventDefault();
       point.x = event.clientX;
       point.y = event.clientY;
@@ -369,11 +465,13 @@ function Canvas() {
       
     };
 
+    
+
     const mouseup = (event: MouseEvent) => {
+      console.log("mouse up");
       document.removeEventListener("mousemove", mousemove);
       document.removeEventListener("mouseup", mouseup);
     };
-
     document.addEventListener("mousemove", mousemove);
     document.addEventListener("mouseup", mouseup);
   }
@@ -434,14 +532,6 @@ function Canvas() {
     );
     setRects(updatedRects);
     setSelectedShape([...selectedShape, "rect"]);
-  };
-
-  const handleDeleteRect = () => {
-    if (selectedRect) {
-      const updatedRects = rects.filter((rect) => rect.stroke !== "blue");
-      setRects(updatedRects);
-      setSelectedRect([]);
-    }
   };
 
 
@@ -559,25 +649,25 @@ function Canvas() {
     setArcs(updatedArcs);
   }
 
-  const handleDeleteArc = () => {
-    if (selectedArc) {
-      const updatedArcs = arcs.filter((arc) => arc.stroke !== "blue");
-      setArcs(updatedArcs);
-      setSelectedArc([]);
-    }
-  }
-
   // ここからhandleContextMenuまでcircleとrectは共通処理
   // 選択解除の処理を追加する
   const handleDeselectShape = useCallback((e: MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (!target.closest("circle") && !target.closest("rect") && !target.closest("path") && selectedCircle.length > 0) {
+    if (!target.closest("circle") && !target.closest("rect") && !target.closest("path") && (selectedCircle.length > 0 || conflictedCircle.length > 0)) {
       // 円選択解除
       setSelectedCircle([]);
       setSelectedShape([]);
-      const updatedCircles = circles.map((circle) =>
-        circle.stroke === "blue" ? { ...circle, stroke: "black" } : circle
-      );
+      const updatedCircles = circles.map((circle) => {
+        if (circle.stroke === "blue") {
+          return {...circle, stroke: "black"};
+        }
+        else if (circle.stroke === "orange") {
+          if (activeSection === "conflict" && !target.closest("li")) {
+            return {...circle, stroke: "black"};
+          }
+        }
+        return circle;
+      })
       setCircles(updatedCircles);
     }
     if (!target.closest("circle") && !target.closest("rect") && !target.closest("path") && selectedRect.length > 0) {
@@ -597,6 +687,7 @@ function Canvas() {
       );
       setArcs(updatedArcs);
     }
+    
   }, [circles, selectedCircle, rects, selectedRect, arcs, selectedArc]);
 
   // 選択解除の処理を監視するためのuseEffectを追加する
@@ -626,7 +717,7 @@ function Canvas() {
 
     const newX = minX + width * sx;
     const newY = minY + height * sy;
-    if (selectedCircle.length > 0 || selectedRect.length > 0) {
+    if (selectedCircle.length > 0 || selectedRect.length > 0 || selectedArc.length > 0) {
       const contextMenu = document.getElementById("context-menu");
       if (contextMenu) {
         contextMenu.style.display = "black";
@@ -634,6 +725,32 @@ function Canvas() {
         contextMenu.style.left = `${newX}px`;
       }
     }
+  };
+
+  // 図形削除
+  const handleDeleteShape = () => {
+    const updatedCircles = circles.filter((circle) => circle.stroke !== "blue");
+    const updatedRects = rects.filter((rect) => rect.stroke !== "blue");
+    setCircles(updatedCircles);
+    setRects(updatedRects);
+
+    // 連結するアークも削除
+    const updatedArcsForCircle = arcs.filter(a => selectedCircle.every(c => c.id !== a.c_id));
+    const updatedArcsForRect = arcs.filter(a => selectedRect.every(r => r.id !== a.r_id));
+    const updatedArcsForSelf = arcs.filter((arc) => arc.stroke !== "blue");
+    if (selectedCircle.length > 0) {
+      setArcs(updatedArcsForCircle);
+    }
+    else if (selectedRect.length > 0) {
+      setArcs(updatedArcsForRect);
+    }
+    else {
+      setArcs(updatedArcsForSelf);
+    }
+
+    setSelectedCircle([]);
+    setSelectedRect([]);
+    setSelectedArc([]);
   };
 
 
@@ -695,6 +812,64 @@ function Canvas() {
   };
   
 
+  // コントローラ計算
+  const [D, setD] = useState<number[][]>([[]]);
+  const [L, setL] = useState<number[]>([]);
+  const [Dc, setDc] = useState<number[]>([]);
+  const handleCreateController = () => {
+    // ペトリネット接続行列
+    let array_1d: number[] = [];
+    const array_2d: number[][] = [];
+    let pushed_some = false;
+    circles.forEach(c => {
+      rects.forEach(r => {
+        pushed_some = false;
+        console.log("hi");
+        arcs.some(a => {
+          console.log(a.c_id);
+          if (a.c_id === c.id && a.r_id === r.id) {
+            if (a.arrow === 1) {
+              array_1d.push(1);// 行列に1をpush
+              pushed_some = true;
+              return true;
+            }
+            else if (a.arrow === -1) {
+              array_1d.push(-1);// 行列に-1をpush
+              pushed_some = true;
+              return true;
+            }
+          }
+        });
+        if (!pushed_some) {
+            array_1d.push(0);
+          }
+      })
+      array_2d.push(array_1d);// array_2dにarray1dをpush
+      array_1d = [];// array_1dを初期化
+    });
+    setD(array_2d);
+    console.log(array_2d);
+
+    // 制約するプレース
+    let arrayForConflict: number[] = [];
+    let pushed_one = false;
+    circles.forEach(c => {
+      pushed_one = false;
+      conflictedCircle.some(conflict_c => {
+        if (c.id === conflict_c.id) {
+          arrayForConflict.push(1);
+          pushed_one = true;
+          return true; // break
+        }
+      });
+      if (!pushed_one) {
+        arrayForConflict.push(0);
+      }
+    });
+    setL(arrayForConflict);
+    console.log(arrayForConflict);
+  }
+
 
   return (
   
@@ -744,7 +919,7 @@ function Canvas() {
           )}
           {activeSection === "controller" && (
             <div className='CreateController'>
-              <button name='CreateController'>コントローラを生成</button>
+              <button name='CreateController' onClick={handleCreateController}>コントローラを生成</button>
             </div>
           )}
           {activeSection === "ladder" && (
@@ -859,13 +1034,11 @@ function Canvas() {
               strokeWidth={arcStrokeWidth}
             />
           ))}
-            {(selectedCircle.length > 0 || selectedRect.length > 0) && (
+            {(selectedCircle.length > 0 || selectedRect.length > 0 || selectedArc.length > 0) && (
               <foreignObject className="DeleteButton" id="context-menu" style={{position: "relative"}}>
                 <ul>
                   <li onClick={() => {
-                        handleDeleteCircle();
-                        handleDeleteRect();
-                        handleDeleteArc();
+                        handleDeleteShape();
                       }}>削除</li>
                 </ul>
               </foreignObject>
