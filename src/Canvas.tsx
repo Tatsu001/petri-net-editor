@@ -117,6 +117,9 @@ interface Arc {
 function Canvas() {
 
   const BEZIER_PARAM = 1.3; // 小さくすると逆に離れてても小さくくっつく．実験的に調整する．
+  const [circleId, setCircleId] = useState(0);
+  const [rectId, setRectId] = useState(0);
+  const [arcId, setArcId] = useState(0);
 
   //以下Zoom実装
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -220,13 +223,14 @@ function Canvas() {
     
     if (isCreatingCircle) {
       const newCircle: Circle = {
-        id: circles.length,
+        id: circleId,
         cx: newX,
         cy: newY,
         r: placeR,
         stroke: "black",
-        name: circleName,
+        name: String(circleId),//circleName,
       };
+      setCircleId(circleId => circleId+1);
       setCircles([...circles, newCircle]);
       setIsCreatingCircle(false);
       setCircleName("");
@@ -510,14 +514,15 @@ function Canvas() {
     
     if (isCreatingRect) {
       const newRect: Rect = {
-        id: rects.length,
+        id: rectId,
         x: newX - transitionWidth/2,
         y: newY - transitionHeight/2,
         width: transitionWidth,
         height: transitionHeight,
         stroke: "black",
-        name: rectName,
+        name: String(rectId),//rectName,
       };
+      setRectId(rectId => rectId+1);
       setRects([...rects, newRect]);
       setIsCreatingRect(false);
       setRectName("");
@@ -588,7 +593,7 @@ function Canvas() {
         const c2y = epy;
 
         const newArc: Arc = {
-          id: arcs.length,
+          id: arcId,
           c_id: c_id,
           r_id: r_id,
           arrow: 1,
@@ -596,6 +601,7 @@ function Canvas() {
           `M${spx},${spy} C${c1x},${c1y} ${c2x},${c2y} ${epx},${epy}`,
           stroke: "black"
         };
+        setArcId(arcId => arcId+1);
         setArcs([...arcs, newArc]);
         setIsCreatingArc(false);
       }
@@ -619,7 +625,7 @@ function Canvas() {
         const c2x = epx - (d/BEZIER_PARAM);
         const c2y = epy;
         const newArc: Arc = {
-          id: arcs.length,
+          id: arcId,
           c_id: c_id,
           r_id: r_id,
           arrow: -1,
@@ -627,6 +633,7 @@ function Canvas() {
           `M${spx},${spy} C${c1x},${c1y} ${c2x},${c2y} ${epx},${epy}`,
           stroke: "black"
         };
+        setArcId(arcId => arcId+1);
         setArcs([...arcs, newArc]);
         setIsCreatingArc(false);
       }
@@ -728,7 +735,15 @@ function Canvas() {
 
   // 図形削除
   const handleDeleteShape = () => {
-    const updatedCircles = circles.filter((circle) => circle.stroke !== "blue");
+    let updatedCircles = circles.filter((circle) => circle.stroke !== "blue");
+    // ひとつ消したらid振り直し //アークのc_idも変更しなければいけない
+    /*let i = -1;
+    updatedCircles = updatedCircles.map(c => {
+      console.log("HIII");
+      i += 1;
+      return {...c, id: i, name: String(i)}
+    })*/
+    
     const updatedRects = rects.filter((rect) => rect.stroke !== "blue");
     setCircles(updatedCircles);
     setRects(updatedRects);
@@ -885,16 +900,17 @@ function Canvas() {
     // コントローラ描画
     // コントローラに接続するプレースとアークの取り出し
     const newController: Circle = {
-      id: circles.length,
+      id: circleId,
       cx: 400,
       cy: 400,
       r: placeR,
       stroke: "black",
-      name: "Controller"+circles.length,
+      name: "Controller"+circleId,
     };
+    setCircleId(circleId => circleId+1);
     setCircles([...circles, newController]);
     //const rectForController = rects.filter(r => arrayForDc[r.id] !== 0);
-    
+
     // コントローラをDcに従いアークで繋ぐ
     let counter: number = 0;
     rects.forEach(r => {
@@ -920,7 +936,7 @@ function Canvas() {
         const c2y = epy;
 
         const newArc: Arc = {
-          id: arcs.length+counter,
+          id: arcId+counter,
           c_id: newController.id,
           r_id: r.id,
           arrow: 1,
@@ -929,6 +945,7 @@ function Canvas() {
           stroke: "black"
         };
         counter += 1;
+        setArcId(arcId => arcId+1);
         setArcs(arcs => [...arcs, newArc]);
       }
       else if (arrayForDc[r.id] === -1) {
@@ -953,7 +970,7 @@ function Canvas() {
         const c2y = epy;
 
         const newArc: Arc = {
-          id: arcs.length+counter,
+          id: arcId+counter,
           c_id: newController.id,
           r_id: r.id,
           arrow: -1,
@@ -962,30 +979,13 @@ function Canvas() {
           stroke: "black"
         };
         counter += 1;
+        setArcId(arcId => arcId+1);
         setArcs(arcs => [...arcs, newArc]);
       }
     });
-
-
-    // コントローラ生成
-    //const controllerForRect = rects.filter(r => true);
-    
-    //console.log("---------"); // エレベータの例において
-    //console.log(controller.length); // 1になるべきでもsetした直後の変数を読み込んでるからできなさそう
-    //console.log(controllerForRect.length); // 6になるべき
-    //console.log("---------");
-
-    /*for (var t = 0; t < arrayForDC.length; t++) {
-      if (arrayForDC[t] === 1) {
-        const newArc: Arc = {
-          id: arcs.length,
-          c_id: circles.length,
-          r_id: t,
-          arrow: 1,
-          d:
-        }
-      }
-    }*/
+    // idエラー出るなら
+    // setArcId(arcId => arcId+counter) 最後に一気に次のアークまですっ飛ばすIDの処理にする
+    // controllerのアークはarcID+counterなので中身のsetArcId(arcId => arcId+1)で更新されてないのであれば問題ない
   }
 
 
