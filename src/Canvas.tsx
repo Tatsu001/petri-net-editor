@@ -20,8 +20,10 @@ import { NumericLiteral } from "typescript";
 // だから今はクリックしなおしで選択解除することはやめて，間違えたら一度全解除する仕様にする．その方が気持ち悪くない
 
 // やること
-// コントローラ出力
-// 図形を範囲選択できるようにする
+// ファイル保存，開くでモデル保存できるようにする
+// CSS変更
+// ラダー図に出力(jpgかpngかpdfなんならsvgでもおっけー)
+
 
 interface Circle {
   id: number;
@@ -112,11 +114,14 @@ interface Arc {
   arrow: -1 | 1;
   d: string,
   stroke: string;
+  stroke_dasharray: number;
 }
 
 function Canvas() {
 
   const BEZIER_PARAM = 1.3; // 小さくすると逆に離れてても小さくくっつく．実験的に調整する．
+  const SELECTED_COLOR = "blue";
+  const CONFLICT_COLOR = "orange";
   const [circleId, setCircleId] = useState(0);
   const [rectId, setRectId] = useState(0);
   const [arcId, setArcId] = useState(0);
@@ -175,8 +180,6 @@ function Canvas() {
       }
     };
   }, []);
-
-
 
   // サイドバー部分
   const [activeSection, setActiveSection] = useState("");
@@ -247,9 +250,9 @@ function Canvas() {
       setConflictedCircle([...conflictedCircle, circle]);
       const updatedCircles = circles.map(c => {
         if (c.id === circle.id && circle.stroke === "black") {
-          return {...c, stroke: "orange"};
+          return {...c, stroke: CONFLICT_COLOR};
         }
-        else if (c.id === circle.id && circle.stroke === "orange") {
+        else if (c.id === circle.id && circle.stroke === CONFLICT_COLOR) {
           return {...c, stroke: "black"};
         }
         return c
@@ -261,14 +264,14 @@ function Canvas() {
       console.log("onClick");
       /*const updatedCircles = circles.map(c => {
         if (c.id === circle.id && circle.stroke === "black") {
-          return {...c, stroke: "blue"};
+          return {...c, stroke: SELECTED_COLOR};
         }
-        else if (c.id === circle.id && circle.stroke === "blue") {
+        else if (c.id === circle.id && circle.stroke === SELECTED_COLOR) {
           return {...c, stroke: "black"};
         }
         return c
       });*/
-      const updatedCircles = circles.map(c => c.id === circle.id ? {...c, stroke: "blue"} : c);
+      const updatedCircles = circles.map(c => c.id === circle.id ? {...c, stroke: SELECTED_COLOR} : c);
       setCircles(updatedCircles);
       setSelectedShape([...selectedShape, "circle"]);
     }
@@ -306,12 +309,12 @@ function Canvas() {
       const delta = {x: newCursor.x - cursor.x, y: newCursor.y - cursor.y};
 
       const updatedCircles = circles.map((c) => 
-        c.stroke === "blue" ? {...c, cx: c.cx + delta.x, cy: c.cy + delta.y} : c
+        c.stroke === SELECTED_COLOR ? {...c, cx: c.cx + delta.x, cy: c.cy + delta.y} : c
       );
       setCircles(updatedCircles);
 
       const updatedRects = rects.map(r =>
-        r.stroke === "blue" ? {...r, x: r.x + delta.x, y: r.y + delta.y} : r
+        r.stroke === SELECTED_COLOR ? {...r, x: r.x + delta.x, y: r.y + delta.y} : r
       );
       setRects(updatedRects);
 
@@ -468,8 +471,6 @@ function Canvas() {
       
     };
 
-    
-
     const mouseup = (event: MouseEvent) => {
       console.log("mouse up");
       document.removeEventListener("mousemove", mousemove);
@@ -532,7 +533,7 @@ function Canvas() {
   const handleSelectRect = (rect: Rect) => {
     setSelectedRect([...selectedRect, rect]);
     const updatedRects = rects.map(r =>
-      r.id === rect.id ? {...r, stroke: 'blue'} : r
+      r.id === rect.id ? {...r, stroke: SELECTED_COLOR} : r
     );
     setRects(updatedRects);
     setSelectedShape([...selectedShape, "rect"]);
@@ -552,14 +553,14 @@ function Canvas() {
     setSelectedCircle([]);
     setSelectedShape([]);
     const updatedCircles = circles.map((circle) =>
-      circle.stroke === "blue" ? { ...circle, stroke: "black" } : circle
+      circle.stroke === SELECTED_COLOR ? { ...circle, stroke: "black" } : circle
     );
     setCircles(updatedCircles);
     // 四角選択解除
     setSelectedRect([]);
     setSelectedShape([]);
     const updatedRects = rects.map((rect) =>
-      rect.stroke === "blue" ? { ...rect, stroke: "black" } : rect
+      rect.stroke === SELECTED_COLOR ? { ...rect, stroke: "black" } : rect
     );
     setRects(updatedRects);
   }
@@ -599,7 +600,8 @@ function Canvas() {
           arrow: 1,
           d: //`M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`,
           `M${spx},${spy} C${c1x},${c1y} ${c2x},${c2y} ${epx},${epy}`,
-          stroke: "black"
+          stroke: "black",
+          stroke_dasharray: 0
         };
         setArcId(arcId => arcId+1);
         setArcs([...arcs, newArc]);
@@ -631,7 +633,8 @@ function Canvas() {
           arrow: -1,
           d: //`M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`,
           `M${spx},${spy} C${c1x},${c1y} ${c2x},${c2y} ${epx},${epy}`,
-          stroke: "black"
+          stroke: "black",
+          stroke_dasharray: 0,
         };
         setArcId(arcId => arcId+1);
         setArcs([...arcs, newArc]);
@@ -650,7 +653,7 @@ function Canvas() {
   const handleSelectArc = (arc: Arc) => {
     setSelectedArc([...selectedArc, arc]);
     const updatedArcs = arcs.map(a =>
-      a.id === arc.id ? {...a, stroke: 'blue'} : a
+      a.id === arc.id ? {...a, stroke: SELECTED_COLOR} : a
     );
     setArcs(updatedArcs);
   }
@@ -664,10 +667,10 @@ function Canvas() {
       setSelectedCircle([]);
       setSelectedShape([]);
       const updatedCircles = circles.map((circle) => {
-        if (circle.stroke === "blue") {
+        if (circle.stroke === SELECTED_COLOR) {
           return {...circle, stroke: "black"};
         }
-        else if (circle.stroke === "orange") {
+        else if (circle.stroke === CONFLICT_COLOR) {
           if (activeSection === "conflict" && !target.closest("li")) {
             return {...circle, stroke: "black"};
           }
@@ -681,7 +684,7 @@ function Canvas() {
       setSelectedRect([]);
       setSelectedShape([]);
       const updatedRects = rects.map((rect) =>
-        rect.stroke === "blue" ? { ...rect, stroke: "black" } : rect
+        rect.stroke === SELECTED_COLOR ? { ...rect, stroke: "black" } : rect
       );
       setRects(updatedRects);
     }
@@ -689,7 +692,7 @@ function Canvas() {
       // 矢印選択解除
       setSelectedArc([]);
       const updatedArcs = arcs.map((arc) =>
-        arc.stroke === "blue" ? { ...arc, stroke: "black" } : arc
+        arc.stroke === SELECTED_COLOR ? { ...arc, stroke: "black" } : arc
       );
       setArcs(updatedArcs);
     }
@@ -735,23 +738,15 @@ function Canvas() {
 
   // 図形削除
   const handleDeleteShape = () => {
-    let updatedCircles = circles.filter((circle) => circle.stroke !== "blue");
-    // ひとつ消したらid振り直し //アークのc_idも変更しなければいけない
-    /*let i = -1;
-    updatedCircles = updatedCircles.map(c => {
-      console.log("HIII");
-      i += 1;
-      return {...c, id: i, name: String(i)}
-    })*/
-    
-    const updatedRects = rects.filter((rect) => rect.stroke !== "blue");
+    let updatedCircles = circles.filter((circle) => circle.stroke !== SELECTED_COLOR);    
+    const updatedRects = rects.filter((rect) => rect.stroke !== SELECTED_COLOR);
     setCircles(updatedCircles);
     setRects(updatedRects);
 
     // 連結するアークも削除
     const updatedArcsForCircle = arcs.filter(a => selectedCircle.every(c => c.id !== a.c_id));
     const updatedArcsForRect = arcs.filter(a => selectedRect.every(r => r.id !== a.r_id));
-    const updatedArcsForSelf = arcs.filter((arc) => arc.stroke !== "blue");
+    const updatedArcsForSelf = arcs.filter((arc) => arc.stroke !== SELECTED_COLOR);
     if (selectedCircle.length > 0) {
       setArcs(updatedArcsForCircle);
     }
@@ -942,7 +937,8 @@ function Canvas() {
           arrow: 1,
           d: //`M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`,
           `M${spx},${spy} C${c1x},${c1y} ${c2x},${c2y} ${epx},${epy}`,
-          stroke: "black"
+          stroke: "black",
+          stroke_dasharray: 2,
         };
         counter += 1;
         setArcId(arcId => arcId+1);
@@ -976,7 +972,8 @@ function Canvas() {
           arrow: -1,
           d: //`M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`,
           `M${spx},${spy} C${c1x},${c1y} ${c2x},${c2y} ${epx},${epy}`,
-          stroke: "black"
+          stroke: "black",
+          stroke_dasharray: 2
         };
         counter += 1;
         setArcId(arcId => arcId+1);
@@ -1150,6 +1147,7 @@ function Canvas() {
               onContextMenu={(e) => handleContextMenu(e, svgRef.current)}
               fill="transparent"
               strokeWidth={arcStrokeWidth}
+              stroke-dasharray={arc.stroke_dasharray}
             />
           ))}
             {(selectedCircle.length > 0 || selectedRect.length > 0 || selectedArc.length > 0) && (
