@@ -20,7 +20,6 @@ import { NumericLiteral } from "typescript";
 // だから今はクリックしなおしで選択解除することはやめて，間違えたら一度全解除する仕様にする．その方が気持ち悪くない
 
 // やること
-// コントローラ計算
 // コントローラ出力
 // 図形を範囲選択できるようにする
 
@@ -869,19 +868,124 @@ function Canvas() {
     setL(arrayForConflict);
     console.log(arrayForConflict);
 
-    var arrayForDL = [];
+    var arrayForDc: number[] = [];
     for (var i = 0; i < array_1d.length; i++){
-      arrayForDL[i] = 0; // 初期化
+      arrayForDc[i] = 0; // 初期化
     }
     
     // コントローラの計算
     for (var i = 0; i < array_1d.length; i++) {
       for (var j = 0; j < array_2d.length; j++) {
-        arrayForDL[i] += (-1*arrayForConflict[j]) * array_2d[j][i];
+        arrayForDc[i] += (-1*arrayForConflict[j]) * array_2d[j][i];
       }
     }
-    console.log(arrayForDL);
-    setDc(arrayForDL);
+    console.log(arrayForDc);
+    setDc(arrayForDc);
+
+    // コントローラ描画
+    // コントローラに接続するプレースとアークの取り出し
+    const newController: Circle = {
+      id: circles.length,
+      cx: 400,
+      cy: 400,
+      r: placeR,
+      stroke: "black",
+      name: "Controller"+circles.length,
+    };
+    setCircles([...circles, newController]);
+    //const rectForController = rects.filter(r => arrayForDc[r.id] !== 0);
+    
+    // コントローラをDcに従いアークで繋ぐ
+    let counter: number = 0;
+    rects.forEach(r => {
+      if (arrayForDc[r.id] === 1) {
+        console.log("me");
+        const spx = newController.cx + newController.r;
+        const spy = newController.cy;
+        const epx = r.x;
+        const epy = r.y + r.height/2;
+        const shx = (spx + epx) / 2;
+        const shy = spy;
+        const ehx = (spx + epx) / 2;
+        const ehy = epy;
+
+        // 3次にする
+        const dx = epx - spx;
+        const dy = epy - spy;
+        const d = Math.sqrt(dx*dx + dy*dy);
+
+        const c1x = spx + (d/BEZIER_PARAM);
+        const c1y = spy;
+        const c2x = epx - (d/BEZIER_PARAM);
+        const c2y = epy;
+
+        const newArc: Arc = {
+          id: arcs.length+counter,
+          c_id: newController.id,
+          r_id: r.id,
+          arrow: 1,
+          d: //`M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`,
+          `M${spx},${spy} C${c1x},${c1y} ${c2x},${c2y} ${epx},${epy}`,
+          stroke: "black"
+        };
+        counter += 1;
+        setArcs(arcs => [...arcs, newArc]);
+      }
+      else if (arrayForDc[r.id] === -1) {
+        console.log("meme");
+        const spx = r.x + r.width;
+        const spy = r.y + r.height/2;
+        const epx = newController.cx - newController.r;
+        const epy = newController.cy;
+        const shx = (spx + epx) / 2;
+        const shy = spy;
+        const ehx = (spx + epx) / 2;
+        const ehy = epy;
+
+        // 3次にする
+        const dx = epx - spx;
+        const dy = epy - spy;
+        const d = Math.sqrt(dx*dx + dy*dy);
+
+        const c1x = spx + (d/BEZIER_PARAM);
+        const c1y = spy;
+        const c2x = epx - (d/BEZIER_PARAM);
+        const c2y = epy;
+
+        const newArc: Arc = {
+          id: arcs.length+counter,
+          c_id: newController.id,
+          r_id: r.id,
+          arrow: -1,
+          d: //`M${spx},${spy} C${shx},${shy} ${ehx},${ehy} ${epx},${epy}`,
+          `M${spx},${spy} C${c1x},${c1y} ${c2x},${c2y} ${epx},${epy}`,
+          stroke: "black"
+        };
+        counter += 1;
+        setArcs(arcs => [...arcs, newArc]);
+      }
+    });
+
+
+    // コントローラ生成
+    //const controllerForRect = rects.filter(r => true);
+    
+    //console.log("---------"); // エレベータの例において
+    //console.log(controller.length); // 1になるべきでもsetした直後の変数を読み込んでるからできなさそう
+    //console.log(controllerForRect.length); // 6になるべき
+    //console.log("---------");
+
+    /*for (var t = 0; t < arrayForDC.length; t++) {
+      if (arrayForDC[t] === 1) {
+        const newArc: Arc = {
+          id: arcs.length,
+          c_id: circles.length,
+          r_id: t,
+          arrow: 1,
+          d:
+        }
+      }
+    }*/
   }
 
 
