@@ -1068,8 +1068,18 @@ function Canvas() {
           )}
           {activeSection === "file" && (
             <div className='FileOperation'>
-              <button name='FileDownload'>ファイルを　ダウンロード</button>
-              <button name='FileUpload'>ファイルをアップロード</button>
+              <label htmlFor="file-download-start" className="btn">
+                {/*<label htmlFor="FileDownload">ファイルを　ダウンロード</label>*/}
+                <input id="file-download-start" type="file" accept=".svg"/>
+                <span data-en="Download file">ファイルを　ダウンロード</span>
+              </label>
+              <label htmlFor="file-upload-start" className="btn">
+                {/*<label htmlFor="FileUpload">ファイルをアップロード</label>*/}
+                <input id="file-upload-start" type="file" accept=".svg"/>
+                <span data-en="Upload file">ファイルをアップロード</span>
+              </label>
+              {/*<button name='FileDownload'>ファイルを　ダウンロード</button>*/}
+              {/*<button name='FileUpload'>ファイルをアップロード</button>*/}
             </div>
           )}
           {activeSection === "setting" && (

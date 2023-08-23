@@ -106,6 +106,50 @@
   background-color: rgba(247, 87, 87, 0.952);
 }
 
+.SelectCoflict {
+  padding-top: 20px;
+}
+
+.CreateController {
+  padding-top: 20px;
+}
+
+.ChangeLadder {
+  padding-top: 20px;
+}
+
+.FileOperation {
+  padding-top: 20px;
+}
+
+.FileOperation input[type="file"] {
+  display: none !important;
+}
+
+.FileOperation .btn {
+  display: inline-block;
+  width: 38%;
+  text-align: center;
+  cursor: pointer;
+  background-color: #007bff;
+  color: #fff;
+  padding: 5px;
+  font-size: 14px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  margin-top: 5px;
+  margin-bottom: 10px;
+  margin-right: 10px;
+  margin-left: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.FileOperation .btn:hover {
+  background-color: #0056b3;
+}
+
 .path {
   z-index: -10;
 }
+
