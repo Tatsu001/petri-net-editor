@@ -18,11 +18,9 @@ import './Leftsidebar.css';
 // だから今はクリックしなおしで選択解除することはやめて，間違えたら一度全解除する仕様にする．その方が気持ち悪くない
 
 // やること
-// ファイル保存，開くでモデル保存できるようにする
+// （ファイル保存，開くでモデル保存できるようにする）
 // どっかの無料サーバーに挙げる（demoで触れるように）
-// CSS変更
 // ラダー図に出力(jpgかpngかpdfなんならsvgでもおっけー)
-
 
 interface Circle {
   id: number;
@@ -127,7 +125,7 @@ function Canvas() {
 
   //以下Zoom実装
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const [viewBox, setViewBox] = useState('0 0 950 677');
+  const [viewBox, setViewBox] = useState('0 0 1200 677');
   
   const zoomAtCenter = (event: WheelEvent, svg: SVGSVGElement | null, scale: number) => {
     const viewBox = svg?.getAttribute('viewBox');
@@ -639,6 +637,20 @@ function Canvas() {
         setArcs([...arcs, newArc]);
         setIsCreatingArc(false);
       }
+      // 円選択解除
+      setSelectedCircle([]);
+      setSelectedShape([]);
+      const updatedCircles = circles.map((circle) =>
+        circle.stroke === SELECTED_COLOR ? { ...circle, stroke: "black" } : circle
+      );
+      setCircles(updatedCircles);
+      // 四角選択解除
+      setSelectedRect([]);
+      setSelectedShape([]);
+      const updatedRects = rects.map((rect) =>
+        rect.stroke === SELECTED_COLOR ? { ...rect, stroke: "black" } : rect
+      );
+      setRects(updatedRects);     
     }
   }, [selectedCircle, selectedRect, selectedShape, isCreatingArc, arcs]);
 
@@ -676,6 +688,8 @@ function Canvas() {
         }
         return circle;
       })
+      const updatedConflictedCircles = circles.filter(c => c.stroke === CONFLICT_COLOR);
+      setConflictedCircle(updatedConflictedCircles);
       setCircles(updatedCircles);
     }
     if (!target.closest("circle") && !target.closest("rect") && !target.closest("path") && selectedRect.length > 0) {
@@ -863,13 +877,18 @@ function Canvas() {
     let pushed_one = false;
     circles.forEach(c => {
       pushed_one = false;
+      /*
       conflictedCircle.some(conflict_c => {
         if (c.id === conflict_c.id) {
           arrayForConflict.push(1);
           pushed_one = true;
           return true; // break
         }
-      });
+      });*/
+      if (c.stroke === CONFLICT_COLOR) {
+        arrayForConflict.push(1);
+        pushed_one = true;
+      }
       if (!pushed_one) {
         arrayForConflict.push(0);
       }
@@ -1092,7 +1111,7 @@ function Canvas() {
       </div>
 
       {/* 描画部分 */}
-      <svg className="svg_area" width={950} height={677} onClick={(e) => {
+      <svg className="svg_area" width={1200} height={677} onClick={(e) => {
                                       handleCreateCircle(e, svgRef.current);
                                       handleCreateRect(e, svgRef.current);
                                     }} viewBox={viewBox} ref={svgRef}

@@ -105,3 +105,7 @@
 .Rightsidebar .deleteButton:hover {
   background-color: rgba(247, 87, 87, 0.952);
 }
+
+.path {
+  z-index: -10;
+}
