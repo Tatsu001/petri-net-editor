@@ -1,131 +1,107 @@
 .Leftsidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 200px;
-    background-color: #fff;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-  }
-  
-  .LeftsidebarList {
-    width: 100%;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-  }
-  
-  .LeftsidebarList li {
-    width: 100%;
-    padding: 10px;
-    margin: 5px 0;
-    text-align: center;
-    font-size: 16px;
-    font-weight: bold;
-    color: #333;
-    background-color: #fff;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  
-  .LeftsidebarList li:hover {
-    background-color: #e1e1e1;
-    color: #fff;
-  }
-  
-  .LeftsidebarList li.active {
-    background-color: #333;
-    color: #fff;
-  }
-  
-  .Rightsidebar {
-    position: fixed;
-    top: 0;
-    right: 0;
-    height: 100%;
-    width: 350px;
-    background-color: #fff;
-    box-shadow: -10px 0 10px rgba(0, 0, 0, 0.3);
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-  }
-  
-  .CreateModel,
-  .SelectConflict,
-  .CreateController,
-  .ChangeLadder,
-  .FileOperation {
-    width: 100%;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-  }
-  
-  .CreateModel button,
-  .CreateTransition button,
-  .CreateArc button,
-  .CreateController button,
-  .ChangeLadder button,
-  .FileOperation button {
-    width: 80%;
-    margin: 10px 0;
-    padding: 15px;
-    font-size: 16px;
-    font-weight: bold;
-    color: #fff;
-    background-color: #333;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  
-  .CreateModel button:hover,
-  .CreateTransition button:hover,
-  .CreateArc button:hover,
-  .CreateController button:hover,
-  .ChangeLadder button:hover,
-  .FileOperation button:hover {
-    background-color: #fff;
-    color: #333;
-  }
-  
-  .Rightsidebar button {
-    width: 60%;
-    font-size: 14px;
-    padding: 5px;
-    border-radius: 5px;
-  }
-  
-  .Rightsidebar h5 {
-    margin-top: 5px;
-    margin-bottom: 5px;
-  }
-  .Rightsidebar h6 {
-    margin-top: 0px;
-    margin-bottom: 0px;
-  }
-  .Rightsidebar h3 {
-    margin-top: 10px;
-    margin-bottom: 10px;
-  }
-  .Rightsidebar div {
-    width: 100%;
-    overflow: auto;
-    text-align: center;
-  }
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 240px;
+  background-color: #20232a;
+  color: #fff;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 20px;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.LeftsidebarList {
+  width: 100%;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.LeftsidebarList li {
+  padding: 10px 0;
+  text-align: center;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.LeftsidebarList li:hover {
+  background-color: #404448;
+}
+
+.LeftsidebarList li.active {
+  background-color: #292d30;
+}
+
+.Rightsidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 95%;
+  width: 250px;
+  background-color: #f5f5f5;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  padding: 0px;
+  box-shadow: -10px 0 10px rgba(0, 0, 0, 0.1);
+  overflow: auto;
+}
+
+.Rightsidebar button {
+  width: 40%;
+  padding: 5px;
+  font-size: 14px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  margin-top: 5px;
+  margin-right: 10px;
+  margin-left: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.Rightsidebar button:hover {
+  background-color: #0056b3;
+}
+
+.Rightsidebar h3 {
+  margin-top: 50px;
+  margin-bottom: 0px;
+  font-size: 18px;
+  color: #333;
+}
+
+.Rightsidebar h5 {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  font-size: 14px;
+  color: #333;
+}
+
+.Rightsidebar h6 {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.Rightsidebar div {
+  flex-grow: 1;
+  overflow: auto;
+  text-align: center;
+}
+
+.Rightsidebar .deleteButton {
+  background-color: red;
+  margin-top: 100px;
+}
+
+.Rightsidebar .deleteButton:hover {
+  background-color: rgba(247, 87, 87, 0.952);
+}

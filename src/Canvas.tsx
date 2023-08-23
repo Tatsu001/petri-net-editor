@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 //import * as ContextMenu from "@radix-ui/react-context-menu"; // npm install @radix-ui/react-context-menu@latest -Eでダウンロード
-import "./Canvas.css"; // npm install @radix-ui/colors@latest -Eでダウンロード
+//import "./Canvas.css"; // npm install @radix-ui/colors@latest -Eでダウンロード
 import './Leftsidebar.css';
-import { Arrow } from "@radix-ui/react-context-menu";
-import { NumericLiteral } from "typescript";
 
 // foreignobject使用したらsvg内にhtml要素を配置できる（Chrome, FireFoxのみ）
 // foreignObjectによるXHTMLの埋め込みできる　https://atmarkit.itmedia.co.jp/ait/articles/1206/01/news143_5.html
@@ -21,6 +19,7 @@ import { NumericLiteral } from "typescript";
 
 // やること
 // ファイル保存，開くでモデル保存できるようにする
+// どっかの無料サーバーに挙げる（demoで触れるように）
 // CSS変更
 // ラダー図に出力(jpgかpngかpdfなんならsvgでもおっけー)
 
@@ -128,7 +127,7 @@ function Canvas() {
 
   //以下Zoom実装
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const [viewBox, setViewBox] = useState('0 0 900 500');
+  const [viewBox, setViewBox] = useState('0 0 950 677');
   
   const zoomAtCenter = (event: WheelEvent, svg: SVGSVGElement | null, scale: number) => {
     const viewBox = svg?.getAttribute('viewBox');
@@ -988,7 +987,7 @@ function Canvas() {
 
   return (
   
-    <div>
+    <div >
 
       {/* サイドバー部分 */}
       <div className="Leftsidebar">
@@ -1025,6 +1024,12 @@ function Canvas() {
               <br />
               <h3>アーク作成</h3>
               <button name="CreateArc" onClick={handleCreateArcClick}>作成</button>
+              <br />
+              {(selectedCircle.length > 0 || selectedRect.length > 0 || selectedArc.length > 0) && (!isCreatingArc) && (
+                  <button className="deleteButton" onClick={() => {
+                        handleDeleteShape();
+                      }}>削除</button>
+              )}
             </div>
           )}
           {activeSection === "conflict" && (
@@ -1039,12 +1044,12 @@ function Canvas() {
           )}
           {activeSection === "ladder" && (
             <div className='ChangeLadder'>
-              <button name='ChangeLadder'>ラダー図へ変換</button>
+              <button name='ChangeLadder'>ラダー図へ　変換</button>
             </div>
           )}
           {activeSection === "file" && (
             <div className='FileOperation'>
-              <button name='FileDownload'>ファイルをダウンロード</button>
+              <button name='FileDownload'>ファイルを　ダウンロード</button>
               <button name='FileUpload'>ファイルをアップロード</button>
             </div>
           )}
@@ -1087,19 +1092,18 @@ function Canvas() {
       </div>
 
       {/* 描画部分 */}
-      <svg width={900} height={500} onClick={(e) => {
+      <svg className="svg_area" width={950} height={677} onClick={(e) => {
                                       handleCreateCircle(e, svgRef.current);
                                       handleCreateRect(e, svgRef.current);
                                     }} viewBox={viewBox} ref={svgRef}
       >
         <g>
-        {[...Array(10)].map((_, index) => (
+        {/*{[...Array(10)].map((_, index) => (
             <line key={`horizontal-${index}`} x1={0} y1={index * 50} x2="100%" y2={index * 50} stroke="black" />
         ))}
         {[...Array(20)].map((_, index) => (
             <line key={`vertical-${index}`} x1={index * 50} y1={0} x2={index * 50} y2="500" stroke="black" />
-        ))}
-        <line x1={300} y1={300} x2={400} y2={400} stroke="black"></line>
+        ))}*/}
         {circles.map((circle) => (
             <g key={"circle-svg"+circle.id}>
               <circle
@@ -1111,7 +1115,7 @@ function Canvas() {
                 fill="transparent" // noneでもok?
                 strokeWidth={placeStrokeWidth}
                 onClick={() => handleSelectCircle(circle)}
-                onContextMenu={(e) => handleContextMenu(e, svgRef.current)}
+                /*onContextMenu={(e) => handleContextMenu(e, svgRef.current)}*/
                 ref={(e) => (svgCircleElemRef.current = e ? e : null)}
                 onMouseDown={(e) => startDrag(e, svgCircleElemRef.current)}
               />
@@ -1130,7 +1134,7 @@ function Canvas() {
                 fill="transparent"
                 strokeWidth={transitionStrokeWidth}
                 onClick={() => handleSelectRect(rect)} 
-                onContextMenu={(e) => handleContextMenu(e, svgRef.current)}
+                /*onContextMenu={(e) => handleContextMenu(e, svgRef.current)}*/
                 ref={(e) => (svgRectElemRef.current = e ? e: null)}
                 onMouseDown={(e) => startDrag(e, svgRectElemRef.current)}
               />
@@ -1144,13 +1148,13 @@ function Canvas() {
               d={arc.d}
               stroke={arc.stroke}
               onClick={() => handleSelectArc(arc)}
-              onContextMenu={(e) => handleContextMenu(e, svgRef.current)}
+              /*onContextMenu={(e) => handleContextMenu(e, svgRef.current)}*/
               fill="transparent"
               strokeWidth={arcStrokeWidth}
               stroke-dasharray={arc.stroke_dasharray}
             />
           ))}
-            {(selectedCircle.length > 0 || selectedRect.length > 0 || selectedArc.length > 0) && (
+            {/*(selectedCircle.length > 0 || selectedRect.length > 0 || selectedArc.length > 0) && (
               <foreignObject className="DeleteButton" id="context-menu" style={{position: "relative"}}>
                 <ul>
                   <li onClick={() => {
@@ -1158,7 +1162,7 @@ function Canvas() {
                       }}>削除</li>
                 </ul>
               </foreignObject>
-            )}
+                    )*/}
         </g>
       </svg>
 
