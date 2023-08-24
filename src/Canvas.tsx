@@ -108,7 +108,7 @@ interface Arc {
   id: number;
   c_id: number;
   r_id: number;
-  arrow: -1 | 1;
+  arrow: 1 | -1;
   d: string,
   stroke: string;
   stroke_dasharray: number;
@@ -565,6 +565,11 @@ function Canvas() {
 
   const handleCreateArc = useCallback((e: MouseEvent) => {
     if (!isCreatingArc) return;
+    console.log("===========");
+    console.log(circles);
+    console.log(rects);
+    console.log(arcs);
+    console.log("===========");
     if (selectedCircle.length === 1 && selectedRect.length ===1) {
       const c_id = selectedCircle.map(c => c.id)[0];
       const r_id = selectedRect.map(r => r.id)[0];
@@ -1075,9 +1080,46 @@ function Canvas() {
           parsedRects.push(rect);
           counter_r += 1;
           setRectId((prevId) => prevId + 1);
-        } else if (svgElement.tagName === 'path') {
+        } else if (svgElement.children[0]?.nodeName === 'path') {
           // Parse and add arcs
           console.log("I'm path");
+          const d = svgElement.children[0]?.getAttribute('d') || '';
+          const stroke = svgElement.children[0]?.getAttribute('stroke') || 'black';
+          const strokeDashArray = parseFloat(svgElement.children[0]?.getAttribute('stroke-dasharray') || '0');
+          let arrow: 1 | -1;
+          if (svgElement.children[1].childNodes[0].nodeValue === "1") arrow = 1;
+          else if (svgElement.children[1].childNodes[0].nodeValue === "-1") arrow = -1;
+          else arrow = 1;
+          console.log(svgElement.children[1].childNodes[0]);
+
+          // Extract relevant information from the 'd' attribute
+          const match = d.match(/M([\d.]+),([\d.]+) C([\d.]+),([\d.]+) ([\d.]+),([\d.]+) ([\d.]+),([\d.]+)/);
+          if (match) {
+            const [, spx, spy, c1x, c1y, c2x, c2y, epx, epy] = match.map(parseFloat);
+            let c_id;
+            let r_id;
+            if (arrow === 1) {
+              c_id = findCircleIdByPosition(parsedCircles, spx, spy);
+              r_id = findRectIdByPosition(parsedRects, epx, epy);
+            }
+            else if (arrow === -1) {
+              c_id = findCircleIdByPosition(parsedCircles, epx, epy);
+              r_id = findRectIdByPosition(parsedRects, spx, spy);
+            }
+          
+            const newArc: Arc = {
+              id: arcId+counter_a,
+              c_id: c_id ? c_id : 0,
+              r_id: r_id ? r_id : 0,
+              arrow,
+              d,
+              stroke,
+              stroke_dasharray: strokeDashArray,
+            };
+            counter_a += 1;
+            parsedArcs.push(newArc);
+            setArcId((prevId) => prevId + 1);
+          }
         }
       }
     }
@@ -1088,7 +1130,16 @@ function Canvas() {
     setArcs([...arcs, ...parsedArcs]);
   };
 
+  // Helper functions to find circle and rect IDs by position
+  const findCircleIdByPosition = (parsedCircles: Circle[], x: number, y: number): number | undefined => {
+    const foundCircle = parsedCircles.find(c => Math.abs(x - c.cx) <= c.r+0.1);
+    return foundCircle ? foundCircle.id : 0;
+  };
 
+  const findRectIdByPosition = (parsedRects: Rect[], x: number, y: number): number | undefined => {
+    const foundRect = parsedRects.find(r => Math.abs(r.x - x) <= r.width+0.1);
+    return foundRect ? foundRect.id : 0;
+  };
 
 
   return (
@@ -1260,16 +1311,20 @@ function Canvas() {
             
           ))}
           {arcs.map((arc) => (
-            <path
-              key={arc.id}
-              d={arc.d}
-              stroke={arc.stroke}
-              onClick={() => handleSelectArc(arc)}
-              /*onContextMenu={(e) => handleContextMenu(e, svgRef.current)}*/
-              fill="transparent"
-              strokeWidth={arcStrokeWidth}
-              stroke-dasharray={arc.stroke_dasharray}
-            />
+            <g>
+              <path
+                key={arc.id}
+                d={arc.d}
+                stroke={arc.stroke}
+                onClick={() => handleSelectArc(arc)}
+                /*onContextMenu={(e) => handleContextMenu(e, svgRef.current)}*/
+                fill="transparent"
+                strokeWidth={arcStrokeWidth}
+                strokeDasharray={arc.stroke_dasharray}
+              />
+              <text x="0" y="0" >{arc.arrow}</text>
+            </g>
+            
           ))}
             {/*(selectedCircle.length > 0 || selectedRect.length > 0 || selectedArc.length > 0) && (
               <foreignObject className="DeleteButton" id="context-menu" style={{position: "relative"}}>
