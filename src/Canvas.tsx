@@ -18,7 +18,7 @@ import './Leftsidebar.css';
 // だから今はクリックしなおしで選択解除することはやめて，間違えたら一度全解除する仕様にする．その方が気持ち悪くない
 
 // やること
-// （ファイル保存，開くでモデル保存できるようにする）
+// コントローラをクリックしやすくする（svgはcss効かない）
 // どっかの無料サーバーに挙げる（demoで触れるように）
 // ラダー図に出力(jpgかpngかpdfなんならsvgでもおっけー)
 
@@ -518,7 +518,7 @@ function Canvas() {
         width: transitionWidth,
         height: transitionHeight,
         stroke: "black",
-        name: String(rectId),//rectName,
+        name: rectName,//String(rectId),//rectName,
       };
       setRectId(rectId => rectId+1);
       setRects([...rects, newRect]);
@@ -845,6 +845,9 @@ function Canvas() {
   const [Dc, setDc] = useState<number[]>([]);
   const handleCreateController = () => {
     // ペトリネット接続行列
+    console.log(circles);
+    console.log(rects);
+    console.log(arcs);
     let array_1d: number[] = [];
     const array_2d: number[][] = [];
     let pushed_some = false;
@@ -873,7 +876,7 @@ function Canvas() {
       array_2d.push(array_1d);// array_2dにarray1dをpush
     });
     setD(array_2d);
-    //console.log(array_2d);
+    console.log(array_2d);
 
     // 制約するプレース
     let arrayForConflict: number[] = [];
@@ -897,7 +900,7 @@ function Canvas() {
       }
     });
     setL(arrayForConflict);
-    //console.log(arrayForConflict);
+    console.log(arrayForConflict);
 
     var arrayForDc: number[] = [];
     for (var i = 0; i < array_1d.length; i++){
@@ -910,7 +913,7 @@ function Canvas() {
         arrayForDc[i] += (-1*arrayForConflict[j]) * array_2d[j][i];
       }
     }
-    //console.log(arrayForDc);
+    console.log(arrayForDc);
     setDc(arrayForDc);
 
     // コントローラ描画
@@ -1050,24 +1053,21 @@ function Canvas() {
       console.log(svgElements.length);
       for (let i = 0; i < svgElements.length; i++) {
         const svgElement = svgElements[i] as HTMLElement;
-        console.log(svgElement);
-        console.log(svgElement.children[0]);
         if (svgElement.children[0]?.nodeName === 'circle') { // [1]にはtextが入ってる
-          console.log("I'm circle");
-          console.log(svgElement.children[1].childNodes[0].nodeValue);
+          //console.log("I'm circle");
           const circle: Circle = {
             id: circleId+counter_c,
             cx: parseFloat(svgElement.children[0]?.getAttribute('cx') || '0'),
             cy: parseFloat(svgElement.children[0]?.getAttribute('cy') || '0'),
             r: parseFloat(svgElement.children[0]?.getAttribute('r') || '0'),
             stroke: 'black',
-            name: svgElement.children[1].childNodes[0].nodeValue ? svgElement.children[1].childNodes[0].nodeValue : '',
+            name: svgElement.children[1].childNodes[0]?.nodeValue ? svgElement.children[1].childNodes[0].nodeValue : '',
           };
           parsedCircles.push(circle);
           counter_c += 1;
           setCircleId((prevId) => prevId + 1);
         } else if (svgElement.children[0]?.nodeName === 'rect') {
-          console.log("I'm rect");
+          //console.log("I'm rect");
           const rect: Rect = {
             id: rectId+counter_r,
             x: parseFloat(svgElement.children[0]?.getAttribute('x') || '0'),
@@ -1075,14 +1075,14 @@ function Canvas() {
             width: parseFloat(svgElement.children[0]?.getAttribute('width') || '0'),
             height: parseFloat(svgElement.children[0]?.getAttribute('height') || '0'),
             stroke: 'black',
-            name: svgElement.children[1].childNodes[0].nodeValue ? svgElement.children[1].childNodes[0].nodeValue : '',
+            name: svgElement.children[1].childNodes[0]?.nodeValue ? svgElement.children[1].childNodes[0].nodeValue : '',
           };
           parsedRects.push(rect);
           counter_r += 1;
           setRectId((prevId) => prevId + 1);
         } else if (svgElement.children[0]?.nodeName === 'path') {
           // Parse and add arcs
-          console.log("I'm path");
+          //console.log("I'm path");
           const d = svgElement.children[0]?.getAttribute('d') || '';
           const stroke = svgElement.children[0]?.getAttribute('stroke') || 'black';
           const strokeDashArray = parseFloat(svgElement.children[0]?.getAttribute('stroke-dasharray') || '0');
@@ -1100,11 +1100,11 @@ function Canvas() {
             let r_id;
             if (arrow === 1) {
               c_id = findCircleIdByPosition(parsedCircles, spx, spy);
-              r_id = findRectIdByPosition(parsedRects, epx, epy);
+              r_id = findRectIdByPosition(parsedRects, epx, epy, arrow);
             }
             else if (arrow === -1) {
               c_id = findCircleIdByPosition(parsedCircles, epx, epy);
-              r_id = findRectIdByPosition(parsedRects, spx, spy);
+              r_id = findRectIdByPosition(parsedRects, spx, spy, arrow);
             }
           
             const newArc: Arc = {
@@ -1132,13 +1132,22 @@ function Canvas() {
 
   // Helper functions to find circle and rect IDs by position
   const findCircleIdByPosition = (parsedCircles: Circle[], x: number, y: number): number | undefined => {
-    const foundCircle = parsedCircles.find(c => Math.abs(x - c.cx) <= c.r+0.1);
+    // 誤差±5で取ってるから危ない時あるかも（重なってたりしなかったらよっぽど大丈夫そう）
+    const foundCircle = parsedCircles.find(c => 
+      c.r-5 <= Math.abs(x - c.cx) && Math.abs(x - c.cx) <= c.r+5 && -5 <= y - c.cy && y - c.cy <= 5);
     return foundCircle ? foundCircle.id : 0;
   };
 
-  const findRectIdByPosition = (parsedRects: Rect[], x: number, y: number): number | undefined => {
-    const foundRect = parsedRects.find(r => Math.abs(r.x - x) <= r.width+0.1);
-    return foundRect ? foundRect.id : 0;
+  // rectのx,y座標は左上
+  const findRectIdByPosition = (parsedRects: Rect[], x: number, y: number, arrow: 1 | -1): number | undefined => {
+    if (arrow === 1) {
+      const foundRect = parsedRects.find(r => x-5 <= r.x && r.x <= x+5 && y-5 <= r.y + r.height/2 && r.y + r.height/2 <= y+5);
+      return foundRect ? foundRect.id : 0;
+    }
+    else if (arrow === -1) {
+      const foundRect = parsedRects.find(r => x-5 <= r.x + r.width && r.x + r.width <= x+5 && y-5 <= r.y + r.height/2 && r.y + r.height/2 <= y+5);
+      return foundRect ? foundRect.id : 0;
+    }
   };
 
 
@@ -1266,12 +1275,6 @@ function Canvas() {
                                     }} viewBox={viewBox} ref={svgRef}
       >
         <g>
-        {/*{[...Array(10)].map((_, index) => (
-            <line key={`horizontal-${index}`} x1={0} y1={index * 50} x2="100%" y2={index * 50} stroke="black" />
-        ))}
-        {[...Array(20)].map((_, index) => (
-            <line key={`vertical-${index}`} x1={index * 50} y1={0} x2={index * 50} y2="500" stroke="black" />
-        ))}*/}
         {circles.map((circle) => (
             <g key={"circle-svg"+circle.id}>
               <circle
@@ -1322,7 +1325,7 @@ function Canvas() {
                 strokeWidth={arcStrokeWidth}
                 strokeDasharray={arc.stroke_dasharray}
               />
-              <text x="0" y="0" >{arc.arrow}</text>
+              <text x="0" y="0" fontSize="0">{arc.arrow}</text>
             </g>
             
           ))}

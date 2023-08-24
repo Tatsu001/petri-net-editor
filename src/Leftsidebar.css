@@ -149,6 +149,14 @@
   background-color: #0056b3;
 }
 
+.circle {
+  z-index: 10;
+}
+
+.rect {
+  z-index: 10;
+}
+
 .path {
   z-index: -10;
 }
