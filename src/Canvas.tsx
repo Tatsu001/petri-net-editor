@@ -228,7 +228,7 @@ function Canvas() {
         cy: newY,
         r: placeR,
         stroke: "black",
-        name: String(circleId),//circleName,
+        name: circleName,//String(circleId),//circleName,
       };
       setCircleId(circleId => circleId+1);
       setCircles([...circles, newCircle]);
@@ -240,7 +240,7 @@ function Canvas() {
   const handleSelectCircle = (circle: Circle) => {   
     // 競合選択用
     if (activeSection === "conflict") {
-      console.log(activeSection);
+      //console.log(activeSection);
       setIsCreatingCircle(false);
       setIsCreatingRect(false);
       setIsCreatingArc(false);
@@ -258,7 +258,7 @@ function Canvas() {
     }
     else if (activeSection === "model") { // 競合選択じゃないとき
       setSelectedCircle([...selectedCircle, circle]);
-      console.log("onClick");
+      //console.log("onClick");
       /*const updatedCircles = circles.map(c => {
         if (c.id === circle.id && circle.stroke === "black") {
           return {...c, stroke: SELECTED_COLOR};
@@ -285,7 +285,7 @@ function Canvas() {
     draggedElem: SVGCircleElement | SVGRectElement | null,
   ) => {
     event.preventDefault();
-    console.log("Start Drag");
+    //console.log("Start Drag");
     if (svgRef.current === null || draggedElem === null) return;
     const point = svgRef.current.createSVGPoint();
     point.x = event.clientX;
@@ -295,7 +295,7 @@ function Canvas() {
     );
     
     const mousemove = (event: MouseEvent) => {
-      console.log("moving");
+      //console.log("moving");
       event.preventDefault();
       point.x = event.clientX;
       point.y = event.clientY;
@@ -469,7 +469,7 @@ function Canvas() {
     };
 
     const mouseup = (event: MouseEvent) => {
-      console.log("mouse up");
+      //console.log("mouse up");
       document.removeEventListener("mousemove", mousemove);
       document.removeEventListener("mouseup", mouseup);
     };
@@ -847,9 +847,7 @@ function Canvas() {
       array_1d = [];// array_1dを初期化
       rects.forEach(r => {
         pushed_some = false;
-        console.log("hi");
         arcs.some(a => {
-          console.log(a.c_id);
           if (a.c_id === c.id && a.r_id === r.id) {
             if (a.arrow === 1) {
               array_1d.push(1);// 行列に1をpush
@@ -870,7 +868,7 @@ function Canvas() {
       array_2d.push(array_1d);// array_2dにarray1dをpush
     });
     setD(array_2d);
-    console.log(array_2d);
+    //console.log(array_2d);
 
     // 制約するプレース
     let arrayForConflict: number[] = [];
@@ -894,7 +892,7 @@ function Canvas() {
       }
     });
     setL(arrayForConflict);
-    console.log(arrayForConflict);
+    //console.log(arrayForConflict);
 
     var arrayForDc: number[] = [];
     for (var i = 0; i < array_1d.length; i++){
@@ -907,7 +905,7 @@ function Canvas() {
         arrayForDc[i] += (-1*arrayForConflict[j]) * array_2d[j][i];
       }
     }
-    console.log(arrayForDc);
+    //console.log(arrayForDc);
     setDc(arrayForDc);
 
     // コントローラ描画
@@ -928,7 +926,6 @@ function Canvas() {
     let counter: number = 0;
     rects.forEach(r => {
       if (arrayForDc[r.id] === 1) {
-        console.log("me");
         const spx = newController.cx + newController.r;
         const spy = newController.cy;
         const epx = r.x;
@@ -963,7 +960,6 @@ function Canvas() {
         setArcs(arcs => [...arcs, newArc]);
       }
       else if (arrayForDc[r.id] === -1) {
-        console.log("meme");
         const spx = r.x + r.width;
         const spy = r.y + r.height/2;
         const epx = newController.cx - newController.r;
@@ -1002,6 +998,97 @@ function Canvas() {
     // setArcId(arcId => arcId+counter) 最後に一気に次のアークまですっ飛ばすIDの処理にする
     // controllerのアークはarcID+counterなので中身のsetArcId(arcId => arcId+1)で更新されてないのであれば問題ない
   }
+
+  // ダウンロード用関数
+  const downloadSVG = () => {
+    const svgElement = svgRef.current;
+    if (!svgElement) return;
+    
+    const svgString = new XMLSerializer().serializeToString(svgElement);
+    const blob = new Blob([svgString], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "petrinet.svg";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // アップロード用関数
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const svgString = event.target?.result as string;
+        parseAndAddSVGElements(svgString);
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const parseAndAddSVGElements = (svgString: string) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svgString, 'image/svg+xml');
+    const svgElements = doc.getElementsByTagName('g')[0]?.childNodes;
+    //console.log(doc.getElementsByTagName('g')[0].childNodes);
+  
+    const parsedCircles: Circle[] = [];
+    const parsedRects: Rect[] = [];
+    const parsedArcs: Arc[] = [];
+    let counter_c: number = 0;
+    let counter_r: number = 0;
+    let counter_a: number = 0;
+    if (svgElements) {
+      console.log(svgElements.length);
+      for (let i = 0; i < svgElements.length; i++) {
+        const svgElement = svgElements[i] as HTMLElement;
+        console.log(svgElement);
+        console.log(svgElement.children[0]);
+        if (svgElement.children[0]?.nodeName === 'circle') { // [1]にはtextが入ってる
+          console.log("I'm circle");
+          console.log(svgElement.children[1].childNodes[0].nodeValue);
+          const circle: Circle = {
+            id: circleId+counter_c,
+            cx: parseFloat(svgElement.children[0]?.getAttribute('cx') || '0'),
+            cy: parseFloat(svgElement.children[0]?.getAttribute('cy') || '0'),
+            r: parseFloat(svgElement.children[0]?.getAttribute('r') || '0'),
+            stroke: 'black',
+            name: svgElement.children[1].childNodes[0].nodeValue ? svgElement.children[1].childNodes[0].nodeValue : '',
+          };
+          parsedCircles.push(circle);
+          counter_c += 1;
+          setCircleId((prevId) => prevId + 1);
+        } else if (svgElement.children[0]?.nodeName === 'rect') {
+          console.log("I'm rect");
+          const rect: Rect = {
+            id: rectId+counter_r,
+            x: parseFloat(svgElement.children[0]?.getAttribute('x') || '0'),
+            y: parseFloat(svgElement.children[0]?.getAttribute('y') || '0'),
+            width: parseFloat(svgElement.children[0]?.getAttribute('width') || '0'),
+            height: parseFloat(svgElement.children[0]?.getAttribute('height') || '0'),
+            stroke: 'black',
+            name: svgElement.children[1].childNodes[0].nodeValue ? svgElement.children[1].childNodes[0].nodeValue : '',
+          };
+          parsedRects.push(rect);
+          counter_r += 1;
+          setRectId((prevId) => prevId + 1);
+        } else if (svgElement.tagName === 'path') {
+          // Parse and add arcs
+          console.log("I'm path");
+        }
+      }
+    }
+  
+    // Update state with parsed elements
+    setCircles([...circles, ...parsedCircles]);
+    setRects([...rects, ...parsedRects]);
+    setArcs([...arcs, ...parsedArcs]);
+  };
+
+
 
 
   return (
@@ -1068,18 +1155,19 @@ function Canvas() {
           )}
           {activeSection === "file" && (
             <div className='FileOperation'>
-              <label htmlFor="file-download-start" className="btn">
-                {/*<label htmlFor="FileDownload">ファイルを　ダウンロード</label>*/}
+              {/*<label htmlFor="file-download-start" className="btn">
                 <input id="file-download-start" type="file" accept=".svg"/>
                 <span data-en="Download file">ファイルを　ダウンロード</span>
               </label>
               <label htmlFor="file-upload-start" className="btn">
-                {/*<label htmlFor="FileUpload">ファイルをアップロード</label>*/}
                 <input id="file-upload-start" type="file" accept=".svg"/>
                 <span data-en="Upload file">ファイルをアップロード</span>
+              </label>*/}
+              <button name='FileDownload' onClick={downloadSVG}>ファイルを　ダウンロード</button>
+              <label htmlFor="file-upload-start" className="btn">
+                <input id="file-upload-start" type="file" accept=".svg" onChange={handleFileUpload}/>
+                <span data-en="Upload file">ファイルをアップロード</span>
               </label>
-              {/*<button name='FileDownload'>ファイルを　ダウンロード</button>*/}
-              {/*<button name='FileUpload'>ファイルをアップロード</button>*/}
             </div>
           )}
           {activeSection === "setting" && (
