@@ -2,12 +2,15 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 //import * as ContextMenu from "@radix-ui/react-context-menu"; // npm install @radix-ui/react-context-menu@latest -Eでダウンロード
 //import "./Canvas.css"; // npm install @radix-ui/colors@latest -Eでダウンロード
 import './Leftsidebar.css';
+import init, {calculate_controller, add} from 'wasm-lib';
 
 // foreignobject使用したらsvg内にhtml要素を配置できる（Chrome, FireFoxのみ）
 // foreignObjectによるXHTMLの埋め込みできる　https://atmarkit.itmedia.co.jp/ait/articles/1206/01/news143_5.html
 // ドラッグアンドドロット https://gist.github.com/hashrock/0e8f10d9a233127c5e33b09ca6883ff4
 // svgエディタ作った人 https://hashrock.hatenablog.com/entry/2017/12/04/215559
 // svg詳しい基礎解説 https://www.webdesignleaves.com/pr/html/svg_basic.html
+// rust <-> js 配列の受け渡し https://ykicisk.hatenablog.com/entry/2017/04/30/195824
+// ↑Js側で配列のメモリ確保してそのポインタをRsutに渡さないといけないっぽいのでめんどくさい
 
 // マウスイベントはmouseDown, mouseUp, onClickの順番で動作する．
 // また人間側の意味のクリック（短時間でボタンかちっ）とドラッグアンドドロップ（長時間でボタンかちっ）
@@ -913,6 +916,7 @@ function Canvas() {
         arrayForDc[i] += (-1*arrayForConflict[j]) * array_2d[j][i];
       }
     }
+    //calculate_controller(array_1d, array_1d);
     console.log(arrayForDc);
     setDc(arrayForDc);
 
@@ -1150,6 +1154,25 @@ function Canvas() {
     }
   };
 
+  
+  // ラダー図に変換
+  // ペトリネットの時点で上から下，左から右の順にidを振りなおさなけらば，
+  // ラダー図に変換したときにきれいに上から下にならないが，
+  // ラダー図は上から下にループしているので動作上は問題ない．（はず）
+  // なので今回はidがバラバラなら，ラダー図もバラバラに出力されてもしかたないやり方でやる
+  // でも順番にペトリネットを書いていけばラダー図もきれいに上から下に流れるはず
+  const handleChangeToLader = () => {
+
+  }
+
+  const ladder_input_a = () => {
+    return (
+      <g>
+        <path></path>
+      </g>
+    )
+  }
+
 
   return (
   
@@ -1210,7 +1233,7 @@ function Canvas() {
           )}
           {activeSection === "ladder" && (
             <div className='ChangeLadder'>
-              <button name='ChangeLadder'>ラダー図へ　変換</button>
+              <button name='ChangeLadder' onClick={handleChangeToLader}>ラダー図へ　変換</button>
             </div>
           )}
           {activeSection === "file" && (
