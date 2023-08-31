@@ -25,7 +25,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "cross-env PUBLIC_URL=/<リポジトリ名> react-scripts build",
+    "build": "cross-env PUBLIC_URL=/petri-net-editor react-scripts build",
     "build:wasm": "cd wasm-lib && wasm-pack build --target web --out-dir pkg",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
