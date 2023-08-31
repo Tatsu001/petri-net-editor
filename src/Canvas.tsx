@@ -11,6 +11,7 @@ import init, {calculate_controller, add} from 'wasm-lib';
 // svg詳しい基礎解説 https://www.webdesignleaves.com/pr/html/svg_basic.html
 // rust <-> js 配列の受け渡し https://ykicisk.hatenablog.com/entry/2017/04/30/195824
 // ↑Js側で配列のメモリ確保してそのポインタをRsutに渡さないといけないっぽいのでめんどくさい
+// ページ公開参考サイト https://www.sukerou.com/2022/03/github-pages-react.html
 
 // マウスイベントはmouseDown, mouseUp, onClickの順番で動作する．
 // また人間側の意味のクリック（短時間でボタンかちっ）とドラッグアンドドロップ（長時間でボタンかちっ）
