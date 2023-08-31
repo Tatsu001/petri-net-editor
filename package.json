@@ -25,14 +25,11 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "cross-env PUBLIC_URL=/<リポジトリ名> react-scripts build",
     "build:wasm": "cd wasm-lib && wasm-pack build --target web --out-dir pkg",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "rm": "rm -rf docs",
-    "mv": "mv build docs",
-    "git": "git add . && git commit && git push",
-    "deploy": "npm run rm && npm run build && npm run mv && npm run git"
+    "deploy": "npm run build && gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
@@ -53,6 +50,8 @@
     ]
   },
   "devDependencies": {
-    "@types/react-svg-pan-zoom": "^3.3.5"
+    "@types/react-svg-pan-zoom": "^3.3.5",
+    "cross-env": "^7.0.3",
+    "gh-pages": "^6.0.0"
   }
 }
