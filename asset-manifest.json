@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/petri-net-editor/static/css/main.108b3f58.css",
-    "main.js": "/petri-net-editor/static/js/main.ab6f1df1.js",
+    "main.js": "/petri-net-editor/static/js/main.f98c6118.js",
     "static/js/787.e52f66c7.chunk.js": "/petri-net-editor/static/js/787.e52f66c7.chunk.js",
     "index.html": "/petri-net-editor/index.html",
     "main.108b3f58.css.map": "/petri-net-editor/static/css/main.108b3f58.css.map",
-    "main.ab6f1df1.js.map": "/petri-net-editor/static/js/main.ab6f1df1.js.map",
+    "main.f98c6118.js.map": "/petri-net-editor/static/js/main.f98c6118.js.map",
     "787.e52f66c7.chunk.js.map": "/petri-net-editor/static/js/787.e52f66c7.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.108b3f58.css",
-    "static/js/main.ab6f1df1.js"
+    "static/js/main.f98c6118.js"
   ]
 }
