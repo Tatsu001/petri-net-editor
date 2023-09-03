@@ -1229,28 +1229,20 @@ function Canvas() {
           )}
           {activeSection === "controller" && (
             <div className='CreateController'>
-              <button name='CreateController' onClick={handleCreateController}>コントローラを生成</button>
+              <button name='CreateController' /*onClick={handleCreateController}*/>コントローラを生成</button>
             </div>
           )}
           {activeSection === "ladder" && (
             <div className='ChangeLadder'>
-              <button name='ChangeLadder' /*onClick={handleChangeToLader}*/>ラダー図へ　変換</button>
+              <button name='ChangeLadder' onClick={handleChangeToLader}>ラダー図へ　変換</button>
             </div>
           )}
           {activeSection === "file" && (
             <div className='FileOperation'>
-              {/*<label htmlFor="file-download-start" className="btn">
-                <input id="file-download-start" type="file" accept=".svg"/>
-                <span data-en="Download file">ファイルを　ダウンロード</span>
-              </label>
-              <label htmlFor="file-upload-start" className="btn">
-                <input id="file-upload-start" type="file" accept=".svg"/>
-                <span data-en="Upload file">ファイルをアップロード</span>
-              </label>*/}
-              <button name='FileDownload' /*onClick={downloadSVG}*/>ファイルを　ダウンロード</button>
-              <label htmlFor="file-upload-start" className="btn">
-                <input id="file-upload-start" type="file" accept=".svg" /*onChange={handleFileUpload}*//>
-                <span data-en="Upload file">ファイルをアップロード</span>
+              <button /*name='FileDownload' onClick={downloadSVG}*/>ファイルを　ダウンロード</button>
+              <label /*htmlFor="file-upload-start"*/ className="btn">
+                <input /*id="file-upload-start"*/ type="file" /*accept=".svg" onChange={handleFileUpload}*//>
+                <span /*data-en="Upload file"*/>ファイルをアップロード</span>
               </label>
             </div>
           )}
