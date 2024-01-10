@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 //import * as ContextMenu from "@radix-ui/react-context-menu"; // npm install @radix-ui/react-context-menu@latest -Eでダウンロード
 //import "./Canvas.css"; // npm install @radix-ui/colors@latest -Eでダウンロード
 import './Leftsidebar.css';
+import ladder from './ladder.svg';
 import init, {calculate_controller, add} from 'wasm-lib';
+import { act } from "react-dom/test-utils";
 
 // foreignobject使用したらsvg内にhtml要素を配置できる（Chrome, FireFoxのみ）
 // foreignObjectによるXHTMLの埋め込みできる　https://atmarkit.itmedia.co.jp/ait/articles/1206/01/news143_5.html
@@ -12,6 +14,8 @@ import init, {calculate_controller, add} from 'wasm-lib';
 // rust <-> js 配列の受け渡し https://ykicisk.hatenablog.com/entry/2017/04/30/195824
 // ↑Js側で配列のメモリ確保してそのポインタをRsutに渡さないといけないっぽいのでめんどくさい
 // ページ公開参考サイト https://www.sukerou.com/2022/03/github-pages-react.html
+// npm run deploy で公開できる
+// npm startで実行
 
 // マウスイベントはmouseDown, mouseUp, onClickの順番で動作する．
 // また人間側の意味のクリック（短時間でボタンかちっ）とドラッグアンドドロップ（長時間でボタンかちっ）
@@ -32,7 +36,7 @@ interface Circle {
   cy: number;
   r: number;
   stroke: string;
-  name: string,
+  name: string;
 }
 
 // Circle型かを判定する型ガード関数
@@ -184,9 +188,15 @@ function Canvas() {
 
   // サイドバー部分
   const [activeSection, setActiveSection] = useState("");
+  // ラダー図表示用
+  const [activeLadder, setActiveLadder] = useState(false);
+
 
   const handleSidebarClick = (sectionName: string) => {
     setActiveSection(sectionName);
+    if (sectionName !== "ladder") {
+      setActiveLadder(false);
+    }
   };
 
   // 描画部分
@@ -1164,6 +1174,24 @@ function Canvas() {
   // でも順番にペトリネットを書いていけばラダー図もきれいに上から下に流れるはず
   const handleChangeToLader = () => {
 
+    setActiveLadder(true);
+  
+  // p1 -> t1 -> p2 -> t2 -> p3 -> t3
+
+  // p1 ------ p3 ------- t1
+  // p2 ---|         |--- p2
+
+  // p2 ------ p4 ------- t2
+  // p3 ---|         |--- p3
+
+  // p1 ------ p1のアーク4つ先のp ------ p1のアーク1つ先のt
+  // p2のアーク2つ先のp
+    
+  // p1 -> t1 -> p2 -> t2 -> p3 -> t3
+  //          |>
+
+  // pのidインクリメント
+  // p2 も同じように繰り返して考える．
   }
 
   const ladder_input_a = () => {
@@ -1229,7 +1257,7 @@ function Canvas() {
           )}
           {activeSection === "controller" && (
             <div className='CreateController'>
-              <button name='CreateController' /*onClick={handleCreateController}*/>コントローラを生成</button>
+              <button name='CreateController' onClick={handleCreateController}>コントローラを生成</button>
             </div>
           )}
           {activeSection === "ladder" && (
@@ -1239,10 +1267,10 @@ function Canvas() {
           )}
           {activeSection === "file" && (
             <div className='FileOperation'>
-              <button /*name='FileDownload' onClick={downloadSVG}*/>ファイルを　ダウンロード</button>
-              <label /*htmlFor="file-upload-start"*/ className="btn">
-                <input /*id="file-upload-start"*/ type="file" /*accept=".svg" onChange={handleFileUpload}*//>
-                <span /*data-en="Upload file"*/>ファイルをアップロード</span>
+              <button name='FileDownload' onClick={downloadSVG}>ファイルを　ダウンロード</button>
+              <label htmlFor="file-upload-start" className="btn">
+                <input id="file-upload-start" type="file" accept=".svg" onChange={handleFileUpload}/>
+                <span data-en="Upload file">ファイルをアップロード</span>
               </label>
             </div>
           )}
@@ -1285,6 +1313,9 @@ function Canvas() {
       </div>
 
       {/* 描画部分 */}
+      {activeSection === "ladder" && activeLadder && (
+              <img src={ladder} alt="ladder" style={{paddingLeft: 450}}/>
+      )}
       <svg className="svg_area" width={1200} height={677} onClick={(e) => {
                                       handleCreateCircle(e, svgRef.current);
                                       handleCreateRect(e, svgRef.current);
